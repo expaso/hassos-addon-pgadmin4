@@ -1,2 +1,2 @@
-# HassOS pgAdmin4 PostGRE web client
+# HassOS pgAdmin4 PostgreSQL web client
 A HomeAssistant HassOS add-on containing the pgAdmin4 PostgreSQL Web Client
