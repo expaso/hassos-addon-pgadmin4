@@ -212,7 +212,7 @@ RUN groupadd -g 5050 pgadmin && \
     chown pgadmin:pgadmin /var/log/pgadmin && \
     touch /pgadmin4/config_distro.py && \
     chown pgadmin:pgadmin /pgadmin4/config_distro.py && \
-    setcap CAP_NET_BIND_SERVICE=+eip /usr/local/bin/python3.8
+    setcap CAP_NET_BIND_SERVICE=+eip /usr/bin/python3.8
 USER pgadmin
 
 # Finish up

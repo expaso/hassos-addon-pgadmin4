@@ -3,7 +3,6 @@
 ./entrypoint.sh &
 pgadmin_pid = $!
 
-
 # And let it roll
 bashio::log.notice "pgAdmin 4 is running!"
 wait "${pgadmin_pid}"
