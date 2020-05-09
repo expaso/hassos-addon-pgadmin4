@@ -52,8 +52,8 @@ RUN npm install && \
 # Pull request is already been send https://github.com/kevva/decompress/pull/73,
 # once fixed we will uncomment it.
 #	yarn audit && \
-RUN	yarn audit --groups dependencies && \
-	rm -f package-lock.json && \
+#RUN	yarn audit --groups dependencies && \
+RUN	rm -f package-lock.json && \
     yarn run bundle && \
     rm -rf node_modules \
            yarn.lock \
@@ -76,7 +76,7 @@ RUN apk add --no-cache \
         build-base \
         openssl-dev \
         libffi-dev && \
-    pip install --no-cache-dir \
+        pip install --no-cache-dir \
         sphinx \
         flask_security_too \
         flask_paranoid \
@@ -156,6 +156,21 @@ ENV PYTHONPATH=/pgadmin4
 COPY --from=app-builder /pgadmin4/web /pgadmin4
 COPY --from=docs-builder /pgadmin4/docs/en_US/_build/html/ /pgadmin4/docs
 COPY official-pgadmin4/requirements.txt /pgadmin4/requirements.txt
+
+
+# Insall Python 3
+# This hack is widely applied to avoid python printing issues in docker containers.
+# See: https://github.com/Docker-Hub-frolvlad/docker-alpine-python3/pull/13
+ENV PYTHONUNBUFFERED=1
+RUN echo "**** install Python ****" && \
+    apk add --no-cache python3 && \
+    if [ ! -e /usr/bin/python ]; then ln -sf python3 /usr/bin/python ; fi && \
+    \
+    echo "**** install pip ****" && \
+    python3 -m ensurepip && \
+    rm -r /usr/lib/python*/ensurepip && \
+    pip3 install --no-cache --upgrade pip setuptools wheel && \
+    if [ ! -e /usr/bin/pip ]; then ln -s pip3 /usr/bin/pip ; fi
 
 # Install build-dependencies, build & install C extensions and purge deps in
 # one RUN step
