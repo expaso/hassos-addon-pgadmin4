@@ -16,7 +16,6 @@
   "boot": "auto",
   "init": false,
   "timeout": 20,
-  "80/tcp": null,
   "ports": {
 	"80/tcp": null,
 	"443/tcp": null
@@ -29,12 +28,16 @@
   "options": {
     "ssl": true,
     "certfile": "fullchain.pem",
-    "keyfile": "privkey.pem"
+    "keyfile": "privkey.pem",
+    "default_email": "",
+    "default_password": ""
   },
   "schema": {
     "certfile": "str",
     "keyfile": "str",
-    "ssl": "bool"
+    "ssl": "bool",
+    "default_email": "str?",
+    "default_password": "str?"
   },
   "imageaftercd": "husselhans/hassos-addon-pgadmin4-{arch}"
 }

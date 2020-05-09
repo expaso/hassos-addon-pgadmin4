@@ -1,6 +1,19 @@
 #!/usr/bin/with-contenv bashio
 
-./entrypoint.sh &
+# Prepare SSL whn needed
+if bashio::config.true 'ssl'; then
+    mkdir -p /certs
+    cp /ssl/$(bashio::config 'certfile') /certs/server.cert
+    cp /ssl/$(bashio::config 'keyfile') /certs/server.key
+fi
+
+# Start pgAdmin
+PGADMIN_ENABLE_TLS=$(bashio::config 'ssl') \
+    PGADMIN_DEFAULT_EMAIL="$(bashio::config 'default_email')" \
+    PGADMIN_DEFAULT_PASSWORD="$(bashio::config 'default_password')" \
+    ./entrypoint.sh &
+
+# Save the PID
 pgadmin_pid = $!
 
 # And let it roll
