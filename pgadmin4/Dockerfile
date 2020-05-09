@@ -163,7 +163,7 @@ COPY official-pgadmin4/requirements.txt /pgadmin4/requirements.txt
 # See: https://github.com/Docker-Hub-frolvlad/docker-alpine-python3/pull/13
 ENV PYTHONUNBUFFERED=1
 RUN echo "**** install Python ****" && \
-    apk add --no-cache python3 && \
+    apk add --no-cache python3 python3-dev && \
     if [ ! -e /usr/bin/python ]; then ln -sf python3 /usr/bin/python ; fi && \
     \
     echo "**** install pip ****" && \
