@@ -8,7 +8,7 @@
   "arch": ["aarch64", "amd64", "armhf", "armv7", "i386"],
   "startup": "services",
   "ingress": true,
-  "ingress_port": 5678,
+  "ingress_port": 80,
   "panel_icon": "mdi:database",
   "panel_title": "pgAdmin 4",
   "hassio_api": true,
