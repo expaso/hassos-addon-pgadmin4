@@ -1,0 +1,63 @@
+name: Continuous deployment
+
+on:
+  push:
+    # Sequence of patterns matched against refs/tags
+    tags: [v*]
+
+jobs:
+  build:
+    name: Build image
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+      - name: Build and push tagged Docker image
+        run: |
+          ADDON_VERSION=$( cut -c12- <<< ${{ github.ref }} )
+          sed -i "s/dev/$ADDON_VERSION/g" pgadmin4/config.json
+          sed -i "s/imageaftercd/image/g" pgadmin4/config.json
+          docker run --rm --privileged \
+            -v ~/.docker:/root/.docker \
+            -v /var/run/docker.sock:/var/run/docker.sock \
+            -v "$(pwd)":/data homeassistant/amd64-builder \
+            --target pgadmin4 --all \
+            --docker-user ${{ secrets.DOCKER_USERNAME }} \
+            --docker-password ${{ secrets.DOCKER_PASSWORD }}
+
+  publish:
+    needs: build
+    name: Publish release
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout add-on code
+        uses: actions/checkout@v2
+        with:
+          persist-credentials: false
+          path: addon
+      - name: Checkout repository code
+        uses: actions/checkout@v2
+        with:
+          persist-credentials: false
+          repository: Expaso/hassos-addons
+          path: repository
+      - name: Create local changes and commit files
+        continue-on-error: false
+        run: |
+          ADDON_NAME=$( cut -c21- <<< ${{ github.repository }} )
+          ADDON_VERSION=$( cut -c12- <<< ${{ github.ref }} )
+          mkdir -p repository/pgadmin4
+          cp -v addon/README.md addon/pgadmin4/config.json addon/pgadmin4/*.png  repository/pgadmin4
+          cd repository
+          sed -i "s/dev/$ADDON_VERSION/g" pgadmin4/config.json
+          sed -i "s/imageaftercd/image/g" pgadmin4/config.json
+          git config --local user.email "hans@expaso.nl"
+          git config --local user.name "Hans van Essen"
+          git add .
+          git commit -m "Upgrade $ADDON_NAME to v$ADDON_VERSION" -a
+      - name: Push changes
+        uses: ad-m/github-push-action@master
+        with:
+          github_token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+          directory: repository
+          repository: Expaso/hassos-addons
