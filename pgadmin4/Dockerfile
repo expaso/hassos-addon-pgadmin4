@@ -157,8 +157,7 @@ COPY --from=app-builder /pgadmin4/web /pgadmin4
 COPY --from=docs-builder /pgadmin4/docs/en_US/_build/html/ /pgadmin4/docs
 COPY official-pgadmin4/requirements.txt /pgadmin4/requirements.txt
 
-
-# Insall Python 3
+# Install Python 3
 # This hack is widely applied to avoid python printing issues in docker containers.
 # See: https://github.com/Docker-Hub-frolvlad/docker-alpine-python3/pull/13
 ENV PYTHONUNBUFFERED=1
@@ -213,13 +212,13 @@ RUN groupadd -g 5050 pgadmin && \
     touch /pgadmin4/config_distro.py && \
     chown pgadmin:pgadmin /pgadmin4/config_distro.py && \
     setcap CAP_NET_BIND_SERVICE=+eip /usr/bin/python3.8
-USER pgadmin
 
 # Finish up
-VOLUME /var/lib/pgadmin
-EXPOSE 80 443
 
-#ENTRYPOINT ["/entrypoint.sh"]
+# USER pgadmin
+# VOLUME /var/lib/pgadmin
+# ENTRYPOINT ["/entrypoint.sh"]
+# EXPOSE 80 443
 
 # --------------------------------------
 # Finish image
