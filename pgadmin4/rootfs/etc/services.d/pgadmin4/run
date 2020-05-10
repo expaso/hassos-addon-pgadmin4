@@ -1,6 +1,6 @@
 #!/usr/bin/with-contenv bashio
 
-# Prepare SSL whn needed
+# Prepare SSL when needed
 if bashio::config.true 'ssl'; then
     mkdir -p /certs
     cp /ssl/$(bashio::config 'certfile') /certs/server.cert
@@ -14,7 +14,7 @@ PGADMIN_ENABLE_TLS=$(bashio::config 'ssl') \
     ./entrypoint.sh &
 
 # Save the PID
-pgadmin_pid = $!
+pgadmin_pid=$!
 
 # And let it roll
 bashio::log.notice "pgAdmin 4 is running!"
