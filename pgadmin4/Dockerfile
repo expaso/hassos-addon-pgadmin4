@@ -1,4 +1,5 @@
 ARG BUILD_FROM
+ARG BUILD_ARCH
 
 ########################################################################
 #
@@ -100,14 +101,14 @@ RUN LC_ALL=en_US.UTF-8 LANG=en_US.UTF-8 make -C /pgadmin4/docs/en_US -f Makefile
 # Create additional builders to get all of the PostgreSQL utilities
 #########################################################################
 
-FROM postgres:9.4-alpine as pg94-builder
-FROM postgres:9.5-alpine as pg95-builder
-FROM postgres:9.6-alpine as pg96-builder
-FROM postgres:10-alpine as pg10-builder
-FROM postgres:11-alpine as pg11-builder
-FROM postgres:12-alpine as pg12-builder
+FROM --platform=${BUILD_ARCH} postgres:9.4-alpine as pg94-builder
+FROM --platform=${BUILD_ARCH} postgres:9.5-alpine as pg95-builder
+FROM --platform=${BUILD_ARCH} postgres:9.6-alpine as pg96-builder
+FROM --platform=${BUILD_ARCH} postgres:10-alpine as pg10-builder
+FROM --platform=${BUILD_ARCH} postgres:11-alpine as pg11-builder
+FROM --platform=${BUILD_ARCH} postgres:12-alpine as pg12-builder
 
-FROM alpine:3.10 as tool-builder
+FROM --platform=${BUILD_ARCH} alpine:3.11 as tool-builder
 
 # Copy the PG binaries
 COPY --from=pg94-builder /usr/local/bin/pg_dump /usr/local/pgsql/pgsql-9.4/
