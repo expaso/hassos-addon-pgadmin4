@@ -2,6 +2,7 @@
 
 # Prepare SSL when needed
 if bashio::config.true 'ssl'; then
+    enable_tls=true
     mkdir -p /certs
     cp /ssl/$(bashio::config 'certfile') /certs/server.cert
     cp /ssl/$(bashio::config 'keyfile') /certs/server.key
@@ -10,7 +11,7 @@ fi
 
 # Start pgAdmin
 cd /pgadmin4
-PGADMIN_ENABLE_TLS=$(bashio::config 'ssl') \
+PGADMIN_ENABLE_TLS=$enable_tls \
     PGADMIN_DEFAULT_EMAIL="$(bashio::config 'default_email')" \
     PGADMIN_DEFAULT_PASSWORD="$(bashio::config 'default_password')" \
     /entrypoint.sh &
