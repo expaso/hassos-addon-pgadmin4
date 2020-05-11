@@ -1,21 +1,21 @@
 #!/usr/bin/with-contenv bashio
 
-# Prepare SSL when needed
-enable_tls=""
-if bashio::config.true 'ssl'; then
-    enable_tls="true"
-    mkdir -p /certs
-    cp /ssl/$(bashio::config 'certfile') /certs/server.cert
-    cp /ssl/$(bashio::config 'keyfile') /certs/server.key
+declare timeout
 
-fi
+# Move to the right dir.
+cd /pgadmin4
+
+# Start Postfix to handle password resets etc.
+sudo /usr/sbin/postfix start
+
+# Get the session timeout from the pgAdmin config. We'll use this (in seconds)
+# to define the Gunicorn worker timeout
+timeout=$(cd /pgadmin4 && python -c 'import config; print(config.SESSION_EXPIRATION_TIME * 60 * 60 * 24)')
 
 # Start pgAdmin
-cd /pgadmin4
-PGADMIN_ENABLE_TLS=$enable_tls \
-    PGADMIN_DEFAULT_EMAIL="$(bashio::config 'default_email')" \
-    PGADMIN_DEFAULT_PASSWORD="$(bashio::config 'default_password')" \
-    /entrypoint.sh &
+# NOTE: currently pgadmin can run only with 1 worker due to sessions implementation
+# Using --threads to have multi-threaded single-process worker
+exec gunicorn --timeout ${timeout} -w 1 --threads ${GUNICORN_THREADS:-25} --access-logfile ${GUNICORN_ACCESS_LOGFILE:--} run_pgadmin:app &
 
 # Save the PID
 pgadmin_pid=$!

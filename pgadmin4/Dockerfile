@@ -1,6 +1,7 @@
 ARG BUILD_FROM
 ARG BUILD_ARCH
 
+#Source: https://github.com/postgres/pgadmin4/blob/master/Dockerfile
 ########################################################################
 #
 # pgAdmin 4 - PostgreSQL Tools
@@ -148,6 +149,9 @@ COPY --from=pg12-builder /usr/local/bin/psql /usr/local/pgsql/pgsql-12/
 FROM $BUILD_FROM
 #python:3.7-alpine3.10
 
+# Set shell
+SHELL ["/bin/bash", "-o", "pipefail", "-c"]
+
 COPY --from=tool-builder /usr/local/pgsql /usr/local/
 
 WORKDIR /pgadmin4
@@ -158,6 +162,7 @@ COPY --from=app-builder /pgadmin4/web /pgadmin4
 COPY --from=docs-builder /pgadmin4/docs/en_US/_build/html/ /pgadmin4/docs
 COPY official-pgadmin4/requirements.txt /pgadmin4/requirements.txt
 
+#--------------------------------------------------------------------------
 # Install Python 3
 # This hack is widely applied to avoid python printing issues in docker containers.
 # See: https://github.com/Docker-Hub-frolvlad/docker-alpine-python3/pull/13
@@ -171,6 +176,7 @@ RUN echo "**** install Python ****" && \
     rm -r /usr/lib/python*/ensurepip && \
     pip3 install --no-cache --upgrade pip setuptools wheel && \
     if [ ! -e /usr/bin/pip ]; then ln -s pip3 /usr/bin/pip ; fi
+#--------------------------------------------------------------------------
 
 # Install build-dependencies, build & install C extensions and purge deps in
 # one RUN step
@@ -199,11 +205,11 @@ RUN ln -sf /usr/lib/libpq.so.5.12 /usr/lib/libpq.so.5
 
 # Copy the runner script
 COPY official-pgadmin4/pkg/docker/run_pgadmin.py /pgadmin4
-COPY official-pgadmin4/pkg/docker/entrypoint.sh /entrypoint.sh
 
 # Precompile and optimize python code to save time and space on startup
 RUN python -O -m compileall -x node_modules /pgadmin4
 
+# Create pgadmin user
 RUN groupadd -g 5050 pgadmin && \
     useradd -r -u 5050 -g pgadmin pgadmin && \
     mkdir -p /var/lib/pgadmin && \
@@ -214,12 +220,13 @@ RUN groupadd -g 5050 pgadmin && \
     chown pgadmin:pgadmin /pgadmin4/config_distro.py && \
     setcap CAP_NET_BIND_SERVICE=+eip /usr/bin/python3.8
 
-# Finish up
-
-# USER pgadmin
-# VOLUME /var/lib/pgadmin
-# ENTRYPOINT ["/entrypoint.sh"]
-# EXPOSE 80 443
+# Install NGINX for Ingress support
+RUN \
+    apk add --no-cache \
+        git \
+        lua-resty-http \
+        nginx-mod-http-lua \
+        nginx
 
 # --------------------------------------
 # Finish image
