@@ -1,13 +1,14 @@
 #!/usr/bin/with-contenv bashio
 
 # Prepare SSL when needed
+enable_tls=""
 if bashio::config.true 'ssl'; then
-    enable_tls=true
+    enable_tls="true"
     mkdir -p /certs
     cp /ssl/$(bashio::config 'certfile') /certs/server.cert
     cp /ssl/$(bashio::config 'keyfile') /certs/server.key
-fi
 
+fi
 
 # Start pgAdmin
 cd /pgadmin4
