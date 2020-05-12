@@ -18,13 +18,19 @@ timeout=$(cd /pgadmin4 && python -c 'import config; print(config.SESSION_EXPIRAT
 # Start pgAdmin
 # NOTE: currently pgadmin can run only with 1 worker due to sessions implementation
 # Using --threads to have multi-threaded single-process worker
-exec gunicorn --timeout ${timeout} --bind ${PGADMIN_LISTEN_ADDRESS:-0.0.0.0}:${PGADMIN_LISTEN_PORT:-5050} -w 1 --threads ${GUNICORN_THREADS:-25} --access-logfile ${GUNICORN_ACCESS_LOGFILE:--} run_pgadmin:app &
-
-# Save the PID
-pgadmin_pid=$!
+gunicorn --bind unix:/tmp/pgadmin4.sock \
+         --timeout ${timeout} \
+         --workers=1 \
+         --threads=25 \
+         --chdir /pgadmin4 \
+         pgAdmin4:app &
+pgadmin_pid = $!
 
 # Wait for pgAdmin4 to become available
-bashio::net.wait_for 5050 localhost 300
+while [ ! -f /tmp/pgadmin4.sock ]
+do
+    sleep 0.5
+done
 
 # And let it roll
 bashio::log.notice "pgAdmin is running."
