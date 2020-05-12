@@ -4,6 +4,8 @@
 # Runs the Nginx daemon
 # ==============================================================================
 
+declare nginx_pid
+
 # Wait for pgAdmin4 to become available
 bashio::net.wait_for 5050 localhost 300
 
@@ -14,4 +16,13 @@ if bashio::config.true 'leave_front_door_open'; then
     export DISABLE_HA_AUTHENTICATION=true
 fi
 
-exec nginx
+exec nginx &
+# Save the PID
+nginx_pid=$!
+
+# Wait for pgAdmin4 to become available
+bashio::net.wait_for 80 localhost 300
+
+# And let it roll
+bashio::log.notice "pgAdmin4 is ready to accept connections."
+wait "${nginx_pid}"
