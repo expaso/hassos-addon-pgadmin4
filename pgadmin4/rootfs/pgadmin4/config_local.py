@@ -116,4 +116,4 @@ TEST_SQLITE_PATH = os.path.join(DATA_DIR, 'test_pgadmin4.db')
 # Master password is used to encrypt/decrypt saved server passwords
 # Applicable for desktop mode only
 ##########################################################################
-MASTER_PASSWORD_REQUIRED = False
+MASTER_PASSWORD_REQUIRED = True
