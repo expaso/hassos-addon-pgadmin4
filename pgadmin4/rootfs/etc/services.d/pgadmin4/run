@@ -24,7 +24,7 @@ gunicorn --bind unix:/tmp/pgadmin4.sock \
          --threads=25 \
          --chdir /pgadmin4 \
          pgAdmin4:app &
-pgadmin_pid = $!
+pgadmin_pid=$!
 
 # Wait for pgAdmin4 to become available
 while [ ! -f /tmp/pgadmin4.sock ]
