@@ -27,8 +27,10 @@ gunicorn --bind unix:/tmp/pgadmin4.sock \
 pgadmin_pid=$!
 
 # Wait for pgAdmin4 to become available
-while [ ! -f /tmp/pgadmin4.sock ]
+bashio::log.info "Waiting for pgadmin to become available.."
+while [ ! -S /tmp/pgadmin4.sock ]
 do
+    echo "."
     sleep 0.5
 done
 

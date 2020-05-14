@@ -24,7 +24,7 @@ import os
 #       from it, notably various paths such as LOG_FILE and anything
 #       using DATA_DIR.
 
-# For Home Assistant, we use the desktop-mode
+# For Home Assistant, we use the desktop-mode (no users, we handle them ourselve)
 SERVER_MODE = False
 
 # User ID (email address) to use for the default user in desktop mode.
