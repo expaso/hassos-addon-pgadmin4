@@ -43,5 +43,5 @@
     "init_commands": ["str"],
     "leave_front_door_open": "bool?"
   },
-  "imageaftercd": "husselhans/hassos-addon-pgadmin4-{arch}",
+  "imageaftercd": "husselhans/hassos-addon-pgadmin4-{arch}"
 }
