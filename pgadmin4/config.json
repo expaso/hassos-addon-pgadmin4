@@ -1,6 +1,6 @@
 {
   "name": "pgAdmin4",
-  "version": "latest",
+  "version": "dev",
   "stage": "experimental",
   "slug": "pgadmin4",
   "description": "A PostgreSQL Management and Query tool",
@@ -44,5 +44,4 @@
     "leave_front_door_open": "bool?"
   },
   "imageaftercd": "husselhans/hassos-addon-pgadmin4-{arch}",
-  "image": "husselhans/hassos-addon-pgadmin4-{arch}"
 }
