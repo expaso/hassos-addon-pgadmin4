@@ -1,7 +1,7 @@
 {
   "name": "pgAdmin4",
   "version": "dev",
-  "stage": "experimental",
+  "stage": "stable",
   "slug": "pgadmin4",
   "description": "A PostgreSQL Management and Query tool",
   "url": "https://github.com/Expaso/hassos-addon-pgadmin4",
@@ -26,7 +26,7 @@
     "443/tcp": "Web interface SSL (Not required for Ingress)"
   },
   "auth_api": true,
-  "map": ["ssl"],
+  "map": ["ssl", "share:rw"],
   "options": {
     "ssl": true,
     "certfile": "fullchain.pem",
