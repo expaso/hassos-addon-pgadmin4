@@ -1,5 +1,13 @@
 {
 	"files.associations": {
 		"*.yaml": "home-assistant"
-	}
+	},
+	"spellright.language": [
+		"en"
+	],
+	"spellright.documentTypes": [
+		"markdown",
+		"latex",
+		"plaintext"
+	]
 }
