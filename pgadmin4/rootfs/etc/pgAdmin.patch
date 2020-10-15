@@ -1,7 +1,7 @@
-diff --git a/web/pgAdmin4.py b/web/pgAdmin4.py
+diff --git a/pgAdmin4.py b/pgAdmin4.py
 index 8e0eb99d3..9f79c1b46 100644
---- a/web/pgAdmin4.py
-+++ b/web/pgAdmin4.py
+--- a/pgAdmin4.py
++++ b/pgAdmin4.py
 @@ -92,7 +92,7 @@ if not os.path.isfile(config.SQLITE_PATH):
  ##########################################################################
  app = create_app()
@@ -11,10 +11,10 @@ index 8e0eb99d3..9f79c1b46 100644
      app.wsgi_app = ReverseProxied(app.wsgi_app)
  
  # Authentication sources
-diff --git a/web/pgadmin/__init__.py b/web/pgadmin/__init__.py
+diff --git a/pgadmin/__init__.py b/pgadmin/__init__.py
 index 275f3656c..73e9c1855 100644
---- a/web/pgadmin/__init__.py
-+++ b/web/pgadmin/__init__.py
+--- a/pgadmin/__init__.py
++++ b/pgadmin/__init__.py
 @@ -99,7 +99,7 @@ class PgAdmin(Flask):
          #############################################################
          import config
