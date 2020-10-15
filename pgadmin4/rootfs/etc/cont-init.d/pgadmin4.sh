@@ -41,5 +41,5 @@ bashio::log.info "Patching pgAdmin to work with HA ingress.."
 #sed -i '105s/config.SERVER_MODE/True/' /pgadmin4/pgadmin/__init__.py    #Line 105: Assume server-mode here to enable reverse-proxy
 #sed -i '95s/config.SERVER_MODE/True/' /pgadmin4/pgAdmin4.py             #Line 94: Assume server-mode here to enable reverse-proxy
 cd /pgadmin4
-git apply -v /etc/cont-init.d/pgAdmin.patch
+git apply -v /etc/pgAdmin.patch
 
