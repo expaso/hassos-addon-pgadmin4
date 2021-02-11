@@ -89,8 +89,8 @@ RUN apk add --no-cache \
 
 # Copy the docs from the local tree. Explicitly remove any existing builds that
 # may be present
-COPY docs /pgadmin4/docs
-COPY web /pgadmin4/web
+COPY official-pgadmin4/docs /pgadmin4/docs
+COPY official-pgadmin4/web /pgadmin4/web
 RUN rm -rf /pgadmin4/docs/en_US/_build
 
 # Build the docs
@@ -100,14 +100,14 @@ RUN LC_ALL=en_US.UTF-8 LANG=en_US.UTF-8 make -C /pgadmin4/docs/en_US -f Makefile
 # Create additional builders to get all of the PostgreSQL utilities
 #########################################################################
 
-FROM postgres:9.5-alpine as pg95-builder
-FROM postgres:9.6-alpine as pg96-builder
-FROM postgres:10-alpine as pg10-builder
-FROM postgres:11-alpine as pg11-builder
-FROM postgres:12-alpine as pg12-builder
-FROM postgres:13-alpine as pg13-builder
+FROM --platform=${BUILD_ARCH} postgres:9.5-alpine as pg95-builder
+FROM --platform=${BUILD_ARCH} postgres:9.6-alpine as pg96-builder
+FROM --platform=${BUILD_ARCH} postgres:10-alpine as pg10-builder
+FROM --platform=${BUILD_ARCH} postgres:11-alpine as pg11-builder
+FROM --platform=${BUILD_ARCH} postgres:12-alpine as pg12-builder
+FROM --platform=${BUILD_ARCH} postgres:13-alpine as pg13-builder
 
-FROM alpine:3.11 as tool-builder
+FROM --platform=${BUILD_ARCH} alpine:3.11 as tool-builder
 
 # Copy the PG binaries
 COPY --from=pg95-builder /usr/local/bin/pg_dump /usr/local/pgsql/pgsql-9.5/
@@ -158,11 +158,11 @@ ENV PYTHONPATH=/pgadmin4
 # Copy in the code and docs
 COPY --from=app-builder /pgadmin4/web /pgadmin4
 COPY --from=docs-builder /pgadmin4/docs/en_US/_build/html/ /pgadmin4/docs
-COPY requirements.txt /pgadmin4/requirements.txt
+COPY official-pgadmin4/requirements.txt /pgadmin4/requirements.txt
 
 # License files
-COPY LICENSE /pgadmin4/LICENSE
-COPY DEPENDENCIES /pgadmin4/DEPENDENCIES
+COPY official-pgadmin4/LICENSE /pgadmin4/LICENSE
+COPY official-pgadmin4/DEPENDENCIES /pgadmin4/DEPENDENCIES
 
 # Install build-dependencies, build & install C extensions and purge deps in
 # one RUN step
@@ -194,9 +194,9 @@ COPY --from=pg13-builder /usr/local/lib/libpq.so.5.13 /usr/lib/
 RUN ln -sf /usr/lib/libpq.so.5.13 /usr/lib/libpq.so.5
 
 # Copy the runner script
-COPY pkg/docker/run_pgadmin.py /pgadmin4
-COPY pkg/docker/gunicorn_config.py /pgadmin4
-COPY pkg/docker/entrypoint.sh /entrypoint.sh
+COPY official-pgadmin4/pkg/docker/run_pgadmin.py /pgadmin4
+COPY official-pgadmin4/pkg/docker/gunicorn_config.py /pgadmin4
+COPY official-pgadmin4/pkg/docker/entrypoint.sh /entrypoint.sh
 
 # Precompile and optimize python code to save time and space on startup
 RUN python -O -m compileall -x node_modules /pgadmin4
