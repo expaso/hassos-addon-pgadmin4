@@ -33,7 +33,7 @@ RUN apk add --no-cache \
 # Create the /pgadmin4 directory and copy the source into it. Explicitly
 # remove the node_modules directory as we'll recreate a clean version, as well
 # as various other files we don't want
-COPY web /pgadmin4/web
+COPY official-pgadmin4/web /pgadmin4/web
 RUN rm -rf /pgadmin4/web/*.log \
            /pgadmin4/web/config_*.py \
            /pgadmin4/web/node_modules \
