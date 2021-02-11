@@ -75,7 +75,8 @@ RUN apk add --no-cache \
         build-base \
         openssl-dev \
         libffi-dev && \
-    pip install --no-cache-dir \
+        pip install --upgrade pip && \
+        pip install --no-cache-dir \
         sphinx \
         flask_security_too \
         flask_paranoid \
