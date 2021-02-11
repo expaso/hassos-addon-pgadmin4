@@ -10,7 +10,6 @@ ARG BUILD_ARCH
 # This software is released under the PostgreSQL Licence
 #
 #########################################################################
-
 #########################################################################
 # Create a Node container which will be used to build the JS components
 # and clean up the web/ source code
