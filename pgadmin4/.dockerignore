@@ -1,2 +1,11 @@
-rootfs/opt/filiibot/node_modules
-rootfs/opt/filiibot/npm-debug.log
+.git
+.vscode
+web/node_modules
+web/*.log
+web/regression
+web/**/tests/
+official-pgadmin4/web/node_modules
+official-pgadmin4/web/*.log
+official-pgadmin4/web/regression
+official-pgadmin4/web/**/tests/
+.DS_Store
