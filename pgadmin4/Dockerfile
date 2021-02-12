@@ -87,6 +87,7 @@ RUN apk add --no-cache \
         flask_gravatar \
         flask_migrate \
         Flask-BabelEx \
+        Flask-Security \
         flask-mail \
         simplejson \
         cryptography==3.3.2
