@@ -89,7 +89,7 @@ RUN apk add --no-cache \
         Flask-BabelEx \
         flask-mail \
         simplejson \
-        cryptography
+        cryptography==3.3.2
 
 # Copy the docs from the local tree. Explicitly remove any existing builds that
 # may be present
