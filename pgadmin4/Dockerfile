@@ -188,7 +188,6 @@ RUN apk add --no-cache --virtual \
         shadow \
         sudo \
         libcap && \
-    python3 -m pip install --upgrade pip && \
     pip install --no-cache-dir -r requirements.txt && \
     pip install --no-cache-dir gunicorn==19.9.0 && \
     apk del --no-cache build-deps && \
