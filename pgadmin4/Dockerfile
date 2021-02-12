@@ -70,12 +70,14 @@ RUN npm install && \
 FROM python:3.9-alpine3.12 as docs-builder
 
 # Install only dependencies absolutely required for documentation building
+
+
 RUN apk add --no-cache \
         make \
         build-base \
         openssl-dev \
         libffi-dev && \
-        pip install --upgrade pip && \
+        python3 -m pip install --upgrade pip && \
         pip install --no-cache-dir \
         sphinx \
         flask_security_too \
@@ -183,7 +185,7 @@ RUN apk add --no-cache --virtual \
         shadow \
         sudo \
         libcap && \
-    pip install --upgrade pip && \
+    python3 -m pip install --upgrade pip && \
     pip install --no-cache-dir -r requirements.txt && \
     pip install --no-cache-dir gunicorn==19.9.0 && \
     apk del --no-cache build-deps && \
