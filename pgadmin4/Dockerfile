@@ -187,6 +187,8 @@ RUN apk add --no-cache --virtual \
         krb5-libs \
         shadow \
         sudo \
+        python3 \
+        py3-pip \
         libcap && \
     pip install --no-cache-dir -r requirements.txt && \
     pip install --no-cache-dir gunicorn==19.9.0 && \
