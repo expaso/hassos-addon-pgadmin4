@@ -190,11 +190,12 @@ RUN apk add --no-cache --virtual \
         shadow \
         sudo \
         python3 \
+        py3-pip \
         libcap && \
     if [ ! -e /usr/bin/python ]; then ln -sf python3 /usr/bin/python ; fi && \
     python -m ensurepip && \
-    pip3 install --no-cache-dir -r requirements.txt && \
-    pip3 install --no-cache-dir gunicorn==19.9.0 && \
+    pip install --no-cache-dir -r requirements.txt && \
+    pip install --no-cache-dir gunicorn==19.9.0 && \
     apk del --no-cache build-deps && \
     echo "pgadmin ALL = NOPASSWD: /usr/sbin/postfix start" > /etc/sudoers.d/postfix
 
