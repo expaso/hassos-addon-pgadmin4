@@ -15,7 +15,7 @@ ARG BUILD_ARCH
 # and clean up the web/ source code
 #########################################################################
 
-FROM node:14-alpine3.13 AS app-builder
+FROM node:14-alpine3.12 AS app-builder
 
 RUN apk add --no-cache \
     autoconf \
