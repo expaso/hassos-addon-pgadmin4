@@ -193,8 +193,8 @@ RUN apk add --no-cache --virtual \
         libcap && \
     if [ ! -e /usr/bin/python ]; then ln -sf python3 /usr/bin/python ; fi && \
     python -m ensurepip && \
-    pip install --no-cache-dir -r requirements.txt && \
-    pip install --no-cache-dir gunicorn==19.9.0 && \
+    pip3 install --no-cache-dir -r requirements.txt && \
+    pip3 install --no-cache-dir gunicorn==19.9.0 && \
     apk del --no-cache build-deps && \
     echo "pgadmin ALL = NOPASSWD: /usr/sbin/postfix start" > /etc/sudoers.d/postfix
 
