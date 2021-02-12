@@ -87,7 +87,7 @@ RUN apk add --no-cache \
         flask_gravatar \
         flask_migrate \
         simplejson \
-        cryptography<=3.3.2
+        cryptography==3.3.2
 
 # Copy the docs from the local tree. Explicitly remove any existing builds that
 # may be present
