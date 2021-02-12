@@ -15,7 +15,7 @@ ARG BUILD_ARCH
 # and clean up the web/ source code
 #########################################################################
 
-FROM node:14-alpine3.12 AS app-builder
+FROM node:14-alpine3.13 AS app-builder
 
 RUN apk add --no-cache \
     autoconf \
@@ -67,7 +67,7 @@ RUN npm install && \
 # Now, create a documentation build container for the Sphinx docs
 #########################################################################
 
-FROM python:3.9-alpine3.12 as docs-builder
+FROM python:3.9-alpine3.13 as docs-builder
 
 # Install only dependencies absolutely required for documentation building
 
@@ -89,7 +89,7 @@ RUN apk add --no-cache \
         Flask-BabelEx \
         flask-mail \
         simplejson \
-        cryptography==3.3.2
+        cryptography
 
 # Copy the docs from the local tree. Explicitly remove any existing builds that
 # may be present
@@ -111,7 +111,7 @@ FROM --platform=${BUILD_ARCH} postgres:11-alpine as pg11-builder
 FROM --platform=${BUILD_ARCH} postgres:12-alpine as pg12-builder
 FROM --platform=${BUILD_ARCH} postgres:13-alpine as pg13-builder
 
-FROM --platform=${BUILD_ARCH} alpine:3.11 as tool-builder
+FROM --platform=${BUILD_ARCH} alpine:3.13 as tool-builder
 
 # Copy the PG binaries
 COPY --from=pg95-builder /usr/local/bin/pg_dump /usr/local/pgsql/pgsql-9.5/
