@@ -169,6 +169,8 @@ COPY official-pgadmin4/requirements.txt /pgadmin4/requirements.txt
 COPY official-pgadmin4/LICENSE /pgadmin4/LICENSE
 COPY official-pgadmin4/DEPENDENCIES /pgadmin4/DEPENDENCIES
 
+ENV PYTHONUNBUFFERED=1
+
 # Install build-dependencies, build & install C extensions and purge deps in
 # one RUN step
 RUN apk add --no-cache --virtual \
@@ -188,8 +190,10 @@ RUN apk add --no-cache --virtual \
         shadow \
         sudo \
         python3 \
-        py3-pip \
         libcap && \
+    if [ ! -e /usr/bin/python ]; then ln -sf python3 /usr/bin/python ; fi && \
+    python3 -m ensurepip && \
+    rm -r /usr/lib/python*/ensurepip && \    
     pip install --no-cache-dir -r requirements.txt && \
     pip install --no-cache-dir gunicorn==19.9.0 && \
     apk del --no-cache build-deps && \
