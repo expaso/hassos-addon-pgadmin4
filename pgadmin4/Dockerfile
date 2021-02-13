@@ -192,8 +192,8 @@ RUN apk add --no-cache --virtual \
         python3 \
         libcap && \
     if [ ! -e /usr/bin/python ]; then ln -sf python3 /usr/bin/python ; fi && \
-    python -m ensurepip && \
-    ln -s /usr/bin/pip3 /usr/bin/pip && \
+    python -m pip install --upgrade pip && \
+    if [ ! -e /usr/bin/pip ]; then ln -sf pip3 /usr/bin/pip ; fi && \
     pip install --no-cache-dir -r requirements.txt && \
     pip install --no-cache-dir gunicorn==19.9.0 && \
     apk del --no-cache build-deps && \
