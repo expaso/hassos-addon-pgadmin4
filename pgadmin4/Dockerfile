@@ -1,5 +1,5 @@
-ARG BUILD_FROM
-ARG BUILD_ARCH
+ARG BUILD_FROM=ghcr.io/hassio-addons/base/amd64:9.1.2
+ARG BUILD_ARCH=amd64
 
 #Source: https://github.com/postgres/pgadmin4/blob/master/Dockerfile
 ########################################################################
@@ -190,11 +190,13 @@ RUN apk add --no-cache --virtual \
         shadow \
         sudo \
         python3 \
+        python3-dev \
         libcap && \
-    if [ ! -e /usr/bin/python ]; then ln -sf python3 /usr/bin/python ; fi && \
-    python -m ensurepip --upgrade && \
-    if [ ! -e /usr/bin/pip ]; then ln -sf pip3 /usr/bin/pip ; fi && \
-    pip install --no-cache-dir -r requirements.txt && \
+    if [ ! -e /usr/bin/python ]; then ln -sf python3 /usr/bin/python ; fi
+
+RUN python -m ensurepip --upgrade && \
+    if [ ! -e /usr/bin/pip ]; then ln -sf pip3 /usr/bin/pip ; fi
+RUN pip install --no-cache-dir -r requirements.txt && \
     pip install --no-cache-dir gunicorn==19.9.0 && \
     apk del --no-cache build-deps && \
     echo "pgadmin ALL = NOPASSWD: /usr/sbin/postfix start" > /etc/sudoers.d/postfix
@@ -220,7 +222,7 @@ RUN groupadd -g 5050 pgadmin && \
     chown pgadmin:pgadmin /var/log/pgadmin && \
     touch /pgadmin4/config_distro.py && \
     chown pgadmin:pgadmin /pgadmin4/config_distro.py && \
-    setcap CAP_NET_BIND_SERVICE=+eip /usr/local/bin/python3.9
+    setcap CAP_NET_BIND_SERVICE=+eip /usr/bin/python3.8
 
 # Install NGINX for Ingress support
 RUN \
