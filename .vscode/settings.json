@@ -9,5 +9,6 @@
 		"markdown",
 		"latex",
 		"plaintext"
-	]
+	],
+	"git.ignoreLimitWarning": true
 }
