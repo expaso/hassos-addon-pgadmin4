@@ -10,24 +10,28 @@ ARG BUILD_ARCH=aarch64
 # This software is released under the PostgreSQL Licence
 #
 #########################################################################
+
 #########################################################################
 # Create a Node container which will be used to build the JS components
 # and clean up the web/ source code
 #########################################################################
 
-FROM node:14-alpine3.12 AS app-builder
+FROM alpine:3.13 AS app-builder
 
 RUN apk add --no-cache \
     autoconf \
     automake \
     bash \
     g++ \
+    git \
     libc6-compat \
     libjpeg-turbo-dev \
     libpng-dev \
+    libtool \
     make \
     nasm \
-    git \
+    nodejs \
+    yarn \
     zlib-dev
 
 # Create the /pgadmin4 directory and copy the source into it. Explicitly
@@ -44,15 +48,7 @@ RUN rm -rf /pgadmin4/web/*.log \
 WORKDIR /pgadmin4/web
 
 # Build the JS vendor code in the app-builder, and then remove the vendor source.
-RUN npm install && \
-	npm audit fix && \
-	rm -f yarn.lock && \
-	yarn import && \
-# Commented the below line to avoid vulnerability in lodash package.
-# Refer https://www.npmjs.com/advisories/1523.
-# Once fixed we will uncomment it.
-#	yarn audit && \
-	rm -f package-lock.json && \
+RUN yarn install && \
     yarn run bundle && \
     rm -rf node_modules \
            yarn.lock \
@@ -64,33 +60,38 @@ RUN npm install && \
            ./pgadmin/static/js/generated/.cache
 
 #########################################################################
+# Next, create the base environment for Python
+#########################################################################
+
+FROM alpine:3.13 as env-builder
+
+# Install dependencies
+COPY official-pgadmin4/requirements.txt /
+RUN     apk add --no-cache \
+        make \
+        python3 \
+        py3-pip && \
+    apk add --no-cache --virtual build-deps \
+        build-base \
+        openssl-dev \
+        libffi-dev \
+        postgresql-dev \
+        krb5-dev \
+        rust \
+        cargo \
+        python3-dev && \
+    python3 -m venv --system-site-packages --without-pip /venv && \
+    /venv/bin/python3 -m pip install --no-cache-dir -r requirements.txt && \
+    apk del --no-cache build-deps
+
+#########################################################################
 # Now, create a documentation build container for the Sphinx docs
 #########################################################################
 
-FROM python:3.9-alpine3.13 as docs-builder
+FROM env-builder as docs-builder
 
-# Install only dependencies absolutely required for documentation building
-
-
-RUN apk add --no-cache \
-        make \
-        build-base \
-        openssl-dev \
-        libffi-dev && \
-        python3 -m pip install --upgrade pip && \
-        pip install --no-cache-dir \
-        sphinx \
-        flask_security_too \
-        flask_paranoid \
-        python-dateutil \
-        flask_sqlalchemy \
-        flask_gravatar \
-        flask_migrate \
-        Flask-BabelEx \
-        Flask-Security \
-        flask-mail \
-        simplejson \
-        cryptography==3.3.2
+# Install Sphinx
+RUN /venv/bin/python3 -m pip install --no-cache-dir sphinx
 
 # Copy the docs from the local tree. Explicitly remove any existing builds that
 # may be present
@@ -99,13 +100,17 @@ COPY official-pgadmin4/web /pgadmin4/web
 RUN rm -rf /pgadmin4/docs/en_US/_build
 
 # Build the docs
-RUN LC_ALL=en_US.UTF-8 LANG=en_US.UTF-8 make -C /pgadmin4/docs/en_US -f Makefile.sphinx html
+RUN LC_ALL=en_US.UTF-8 LANG=en_US.UTF-8 /venv/bin/sphinx-build /pgadmin4/docs/en_US /pgadmin4/docs/en_US/_build/html
+
+# Cleanup unwanted files
+RUN rm -rf /pgadmin4/docs/en_US/_build/html/.doctrees
+RUN rm -rf /pgadmin4/docs/en_US/_build/html/_sources
+RUN rm -rf /pgadmin4/docs/en_US/_build/html/_static/*.png
 
 #########################################################################
 # Create additional builders to get all of the PostgreSQL utilities
 #########################################################################
 
-FROM --platform=${BUILD_ARCH} postgres:9.5-alpine as pg95-builder
 FROM --platform=${BUILD_ARCH} postgres:9.6-alpine as pg96-builder
 FROM --platform=${BUILD_ARCH} postgres:10-alpine as pg10-builder
 FROM --platform=${BUILD_ARCH} postgres:11-alpine as pg11-builder
@@ -115,11 +120,6 @@ FROM --platform=${BUILD_ARCH} postgres:13-alpine as pg13-builder
 FROM --platform=${BUILD_ARCH} alpine:3.13 as tool-builder
 
 # Copy the PG binaries
-COPY --from=pg95-builder /usr/local/bin/pg_dump /usr/local/pgsql/pgsql-9.5/
-COPY --from=pg95-builder /usr/local/bin/pg_dumpall /usr/local/pgsql/pgsql-9.5/
-COPY --from=pg95-builder /usr/local/bin/pg_restore /usr/local/pgsql/pgsql-9.5/
-COPY --from=pg95-builder /usr/local/bin/psql /usr/local/pgsql/pgsql-9.5/
-
 COPY --from=pg96-builder /usr/local/bin/pg_dump /usr/local/pgsql/pgsql-9.6/
 COPY --from=pg96-builder /usr/local/bin/pg_dumpall /usr/local/pgsql/pgsql-9.6/
 COPY --from=pg96-builder /usr/local/bin/pg_restore /usr/local/pgsql/pgsql-9.6/
@@ -152,9 +152,10 @@ COPY --from=pg13-builder /usr/local/bin/psql /usr/local/pgsql/pgsql-13/
 FROM $BUILD_FROM
 #FROM python:3.9-alpine3.12
 
-# Set shell
-SHELL ["/bin/bash", "-o", "pipefail", "-c"]
+# Copy in the Python packages
+COPY --from=env-builder /venv /venv
 
+# Copy in the tools
 COPY --from=tool-builder /usr/local/pgsql /usr/local/
 
 WORKDIR /pgadmin4
@@ -163,66 +164,39 @@ ENV PYTHONPATH=/pgadmin4
 # Copy in the code and docs
 COPY --from=app-builder /pgadmin4/web /pgadmin4
 COPY --from=docs-builder /pgadmin4/docs/en_US/_build/html/ /pgadmin4/docs
-COPY official-pgadmin4/requirements.txt /pgadmin4/requirements.txt
+COPY official-pgadmin4/pkg/docker/run_pgadmin.py /pgadmin4
+COPY official-pgadmin4/pkg/docker/gunicorn_config.py /pgadmin4
+COPY official-pgadmin4/pkg/docker/entrypoint.sh /entrypoint.sh
 
 # License files
 COPY official-pgadmin4/LICENSE /pgadmin4/LICENSE
 COPY official-pgadmin4/DEPENDENCIES /pgadmin4/DEPENDENCIES
 
-ENV PYTHONUNBUFFERED=1
-
-# Install build-dependencies, build & install C extensions and purge deps in
-# one RUN step
-RUN apk add --no-cache --virtual \
-        build-deps \
-        build-base \
-        postgresql-dev \
-        libffi-dev \
-        krb5-dev \
-        e2fsprogs-dev \
-        krb5-server-ldap \
-        linux-headers && \
-    apk add \
+# Install runtime dependencies and configure everything in one RUN step
+RUN apk add \
+        python3 \
+        py3-pip \
         postfix \
-        postgresql-client \
         postgresql-libs \
         krb5-libs \
         shadow \
         sudo \
-        python3 \
-        python3-dev \
+        libedit \
         libcap && \
-    if [ ! -e /usr/bin/python ]; then ln -sf python3 /usr/bin/python ; fi
-
-RUN python -m ensurepip --upgrade && \
-    if [ ! -e /usr/bin/pip ]; then ln -sf pip3 /usr/bin/pip ; fi
-RUN pip install --no-cache-dir -r requirements.txt && \
-    pip install --no-cache-dir gunicorn==19.9.0 && \
-    apk del --no-cache build-deps && \
-    echo "pgadmin ALL = NOPASSWD: /usr/sbin/postfix start" > /etc/sudoers.d/postfix
-
-# We need the v13 libpq
-COPY --from=pg13-builder /usr/local/lib/libpq.so.5.13 /usr/lib/
-RUN ln -sf /usr/lib/libpq.so.5.13 /usr/lib/libpq.so.5
-
-# Copy the runner script
-COPY official-pgadmin4/pkg/docker/run_pgadmin.py /pgadmin4
-COPY official-pgadmin4/pkg/docker/gunicorn_config.py /pgadmin4
-COPY official-pgadmin4/pkg/docker/entrypoint.sh /entrypoint.sh
-
-# Precompile and optimize python code to save time and space on startup
-RUN python -O -m compileall -x node_modules /pgadmin4
-
-# Create pgadmin user
-RUN groupadd -g 5050 pgadmin && \
+    /venv/bin/python3 -m pip install --no-cache-dir gunicorn && \
+    find / -type d -name '__pycache__' -exec rm -rf {} + && \
+    groupadd -g 5050 pgadmin && \
     useradd -r -u 5050 -g pgadmin pgadmin && \
     mkdir -p /var/lib/pgadmin && \
     chown pgadmin:pgadmin /var/lib/pgadmin && \
-    mkdir -p /var/log/pgadmin && \
-    chown pgadmin:pgadmin /var/log/pgadmin && \
     touch /pgadmin4/config_distro.py && \
     chown pgadmin:pgadmin /pgadmin4/config_distro.py && \
-    setcap CAP_NET_BIND_SERVICE=+eip /usr/bin/python3.8
+    setcap CAP_NET_BIND_SERVICE=+eip /usr/bin/python3.8 && \
+    echo "pgadmin ALL = NOPASSWD: /usr/sbin/postfix start" > /etc/sudoers.d/postfix
+
+# --------------------------------------
+# Finish image (Different from official pgAdmin)
+# --------------------------------------
 
 # Install NGINX for Ingress support
 RUN \
@@ -232,9 +206,6 @@ RUN \
         nginx-mod-http-lua \
         nginx
 
-# --------------------------------------
-# Finish image
-# --------------------------------------
 
 # Make sure that S6 is not so hard on our service startup/shutdown
 ENV \

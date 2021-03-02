@@ -1,5 +1,5 @@
 {
-  "name": "pgAdmin4",
+  "name": "pgAdmin",
   "version": "dev",
   "stage": "stable",
   "slug": "pgadmin4",
@@ -10,7 +10,7 @@
   "ingress": true,
   "ingress_port": 0,
   "panel_icon": "mdi:database",
-  "panel_title": "pgAdmin 4",
+  "panel_title": "pgAdmin",
   "hassio_api": true,
   "hassio_role": "default",
   "boot": "auto",
@@ -43,5 +43,5 @@
     "init_commands": ["str"],
     "leave_front_door_open": "bool?"
   },
-  "imageaftercd": "husselhans/hassos-addon-pgadmin4-{arch}"
+  "image": "husselhans/hassos-addon-pgadmin4-{arch}"
 }
