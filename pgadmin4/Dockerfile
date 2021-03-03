@@ -63,7 +63,7 @@ RUN yarn install && \
 # Next, create the base environment for Python
 #########################################################################
 
-FROM --platform=${BUILD_ARCH} alpine:3.13 as env-builder
+FROM alpine:3.13 as env-builder
 
 # Install dependencies
 COPY official-pgadmin4/requirements.txt /
