@@ -1,4 +1,4 @@
-# Home Assistant Add-on: [pgAdmin](https://www.pgadmin.org/)
+# Home Assistant Add-on: [pgAdmin 4](https://www.pgadmin.org/)
 
 ## Introduction
 
