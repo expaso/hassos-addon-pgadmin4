@@ -63,7 +63,7 @@ RUN yarn install && \
 # Next, create the base environment for Python
 #########################################################################
 
-FROM --platform=${BUILD_ARCH} alpine:3.12 as env-builder
+FROM alpine:3.12 as env-builder
 
 # Install dependencies
 COPY official-pgadmin4/requirements.txt /
@@ -146,14 +146,37 @@ COPY --from=pg13-builder /usr/local/bin/pg_restore /usr/local/pgsql/pgsql-13/
 COPY --from=pg13-builder /usr/local/bin/psql /usr/local/pgsql/pgsql-13/
 
 #########################################################################
+# Build platform specific python stuff
+#########################################################################
+FROM --platform=${BUILD_ARCH} python:3.9-alpine3.13 AS python-builder
+COPY official-pgadmin4/requirements.txt /
+# Install dependencies
+COPY official-pgadmin4/requirements.txt /
+RUN     apk add --no-cache \
+        make \
+        python3 \
+        py3-pip && \
+        apk add --no-cache --virtual build-deps \
+        build-base \
+        openssl-dev \
+        libffi-dev \
+        postgresql-dev \
+        krb5-dev \
+        rust \
+        cargo \
+        python3-dev && \
+    python3 -m venv --system-site-packages --without-pip /venv && \
+    /venv/bin/python3 -m pip install --no-cache-dir -r requirements.txt && \
+    apk del --no-cache build-deps
+
+#########################################################################
 # Assemble everything into the final container.
 #########################################################################
-
 FROM $BUILD_FROM
 #FROM python:3.9-alpine3.12
 
 # Copy in the Python packages
-COPY --from=env-builder /venv /venv
+COPY --from=python-builder /venv /venv
 
 # Copy in the tools
 COPY --from=tool-builder /usr/local/pgsql /usr/local/
@@ -173,7 +196,7 @@ COPY official-pgadmin4/LICENSE /pgadmin4/LICENSE
 COPY official-pgadmin4/DEPENDENCIES /pgadmin4/DEPENDENCIES
 
 # Install runtime dependencies and configure everything in one RUN step
-RUN apk add \
+RUN apk add  \
         python3 \
         py3-pip \
         postfix \
@@ -183,6 +206,7 @@ RUN apk add \
         sudo \
         libedit \
         libcap && \
+    python3 -m venv --system-site-packages --without-pip /venv && \
     /venv/bin/python3 -m pip install --no-cache-dir gunicorn && \
     find / -type d -name '__pycache__' -exec rm -rf {} + && \
     groupadd -g 5050 pgadmin && \
