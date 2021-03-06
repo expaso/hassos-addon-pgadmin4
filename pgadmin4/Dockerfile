@@ -204,6 +204,7 @@ RUN apk add  \
         krb5-libs \
         shadow \
         sudo \
+        qemu \
         libedit \
         libcap && \
     python3 -m venv --system-site-packages --without-pip /venv && \
