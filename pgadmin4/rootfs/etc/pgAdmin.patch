@@ -1,26 +1,38 @@
 diff --git a/pgAdmin4.py b/pgAdmin4.py
-index 8e0eb99d3..9f79c1b46 100644
+index d2bd1af6f..a559f0b5a 100644
 --- a/pgAdmin4.py
 +++ b/pgAdmin4.py
-@@ -92,7 +92,7 @@ if not os.path.isfile(config.SQLITE_PATH):
+@@ -97,8 +97,7 @@ if not os.path.isfile(config.SQLITE_PATH):
  ##########################################################################
  app = create_app()
  app.debug = False
 -if config.SERVER_MODE:
-+if True:
-     app.wsgi_app = ReverseProxied(app.wsgi_app)
+-    app.wsgi_app = ReverseProxied(app.wsgi_app)
++app.wsgi_app = ReverseProxied(app.wsgi_app)
  
  # Authentication sources
+ if len(config.AUTHENTICATION_SOURCES) > 0:
 diff --git a/pgadmin/__init__.py b/pgadmin/__init__.py
-index 275f3656c..73e9c1855 100644
+index a73335371..0bc6a23a9 100644
 --- a/pgadmin/__init__.py
 +++ b/pgadmin/__init__.py
-@@ -99,7 +99,7 @@ class PgAdmin(Flask):
+@@ -111,13 +111,12 @@ class PgAdmin(Flask):
          #############################################################
          import config
          is_wsgi_root_present = False
 -        if config.SERVER_MODE:
-+        if True:
-             pgadmin_root_path = url_for('browser.index')
-             if pgadmin_root_path != '/browser/':
-                 is_wsgi_root_present = True
+-            pgadmin_root_path = url_for('browser.index')
+-            if pgadmin_root_path != '/browser/':
+-                is_wsgi_root_present = True
+-                wsgi_root_path = pgadmin_root_path.replace(
+-                    '/browser/', ''
+-                )
++        pgadmin_root_path = url_for('browser.index')
++        if pgadmin_root_path != '/browser/':
++            is_wsgi_root_present = True
++            wsgi_root_path = pgadmin_root_path.replace(
++                '/browser/', ''
++            )
+ 
+         def get_full_url_path(url):
+             """
