@@ -1,7 +1,5 @@
-ARG BUILD_FROM 
-#=ghcr.io/hassio-addons/base/aarch64:9.1.2
-ARG BUILD_ARCH
-#=aarch64
+ARG BUILD_FROM=ghcr.io/hassio-addons/base-python/aarch64:6.0.1
+ARG BUILD_ARCH=aarch64
 
 #Source: https://github.com/postgres/pgadmin4/blob/master/Dockerfile
 ########################################################################
@@ -65,7 +63,7 @@ RUN yarn install && \
 # Next, create the base environment for Python
 #########################################################################
 
-FROM alpine:3.12 as env-builder
+FROM --platform=${BUILD_ARCH} alpine:3.13 as env-builder
 
 # Install dependencies
 COPY official-pgadmin4/requirements.txt /
@@ -89,7 +87,6 @@ RUN     apk add --no-cache \
 #########################################################################
 # Now, create a documentation build container for the Sphinx docs
 #########################################################################
-
 FROM env-builder as docs-builder
 
 # Install Sphinx
@@ -148,35 +145,11 @@ COPY --from=pg13-builder /usr/local/bin/pg_restore /usr/local/pgsql/pgsql-13/
 COPY --from=pg13-builder /usr/local/bin/psql /usr/local/pgsql/pgsql-13/
 
 #########################################################################
-# Build platform specific python stuff
-#########################################################################
-FROM --platform=${BUILD_ARCH} alpine:3.12 AS python-builder
-COPY official-pgadmin4/requirements.txt /
-# Install dependencies
-RUN     apk add --no-cache \
-        make \
-        python3 \
-        py3-pip && \
-        apk add --no-cache --virtual build-deps \
-        build-base \
-        openssl-dev \
-        libffi-dev \
-        postgresql-dev \
-        krb5-dev \
-        rust \
-        cargo \
-        python3-dev && \
-    python3 -m venv --system-site-packages --without-pip /venv && \
-    /venv/bin/python3 -m pip install --no-cache-dir -r requirements.txt
-
-#########################################################################
 # Assemble everything into the final container.
 #########################################################################
 FROM $BUILD_FROM
-#FROM python:3.9-alpine3.12
-
 # Copy in the Python packages
-COPY --from=python-builder /venv /venv
+COPY --from=env-builder /venv /venv
 
 # Copy in the tools
 COPY --from=tool-builder /usr/local/pgsql /usr/local/
@@ -196,7 +169,7 @@ COPY official-pgadmin4/LICENSE /pgadmin4/LICENSE
 COPY official-pgadmin4/DEPENDENCIES /pgadmin4/DEPENDENCIES
 
 # Install runtime dependencies and configure everything in one RUN step
-RUN apk add  \
+RUN apk add \
         python3 \
         py3-pip \
         postfix \
@@ -204,10 +177,8 @@ RUN apk add  \
         krb5-libs \
         shadow \
         sudo \
-        qemu \
         libedit \
         libcap && \
-    python3 -m venv --system-site-packages --without-pip /venv && \
     /venv/bin/python3 -m pip install --no-cache-dir gunicorn && \
     find / -type d -name '__pycache__' -exec rm -rf {} + && \
     groupadd -g 5050 pgadmin && \
@@ -219,9 +190,13 @@ RUN apk add  \
     setcap CAP_NET_BIND_SERVICE=+eip /usr/bin/python3.8 && \
     echo "pgadmin ALL = NOPASSWD: /usr/sbin/postfix start" > /etc/sudoers.d/postfix
 
+
 # --------------------------------------
 # Finish image (Different from official pgAdmin)
 # --------------------------------------
+# Precompile and optimize python code to save time and space on startup
+RUN /venv/bin/python3 -O -m compileall -x node_modules /pgadmin4
+
 
 # Install NGINX for Ingress support
 RUN \
