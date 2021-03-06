@@ -148,10 +148,9 @@ COPY --from=pg13-builder /usr/local/bin/psql /usr/local/pgsql/pgsql-13/
 #########################################################################
 # Build platform specific python stuff
 #########################################################################
-FROM --platform=${BUILD_ARCH} python:3.9-alpine3.13 AS python-builder
+FROM --platform=${BUILD_ARCH} alpine:3.12 AS python-builder
 COPY official-pgadmin4/requirements.txt /
 # Install dependencies
-COPY official-pgadmin4/requirements.txt /
 RUN     apk add --no-cache \
         make \
         python3 \
