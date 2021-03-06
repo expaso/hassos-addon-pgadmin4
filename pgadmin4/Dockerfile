@@ -165,8 +165,7 @@ RUN     apk add --no-cache \
         cargo \
         python3-dev && \
     python3 -m venv --system-site-packages --without-pip /venv && \
-    /venv/bin/python3 -m pip install --no-cache-dir -r requirements.txt && \
-    apk del --no-cache build-deps
+    /venv/bin/python3 -m pip install --no-cache-dir -r requirements.txt
 
 #########################################################################
 # Assemble everything into the final container.
