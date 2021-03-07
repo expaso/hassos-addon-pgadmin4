@@ -1,4 +1,4 @@
-ARG BUILD_FROM=ghcr.io/hassio-addons/base-python/aarch64:6.0.1
+ARG BUILD_FROM=ghcr.io/hassio-addons/base/aarch64:9.1.5
 ARG BUILD_ARCH=aarch64
 
 #Source: https://github.com/postgres/pgadmin4/blob/master/Dockerfile
@@ -14,15 +14,15 @@ ARG BUILD_ARCH=aarch64
 #########################################################################
 # Next, create the base environment for Python
 #########################################################################
-FROM --platform=${BUILD_ARCH} alpine:3.13 as env-builder
+FROM $BUILD_FROM as env-builder
 
 # Install dependencies
 COPY official-pgadmin4/requirements.txt /
 RUN  apk update && \
-        apk add --no-cache \
-        make \
-        python3 \
-        py3-pip && \
+       apk add --no-cache \
+       make \
+       python3 \
+       py3-pip && \
         apk add --no-cache --virtual build-deps \
         build-base \
         openssl-dev \
@@ -31,7 +31,6 @@ RUN  apk update && \
         krb5-dev \
         rust \
         cargo \
-        qemu \
         python3-dev && \
     python3 -m venv --system-site-packages --without-pip /venv && \
     /venv/bin/python3 -m pip install --no-cache-dir -r requirements.txt && \
