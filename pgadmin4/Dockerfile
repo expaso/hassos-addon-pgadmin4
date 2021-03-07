@@ -18,7 +18,8 @@ FROM --platform=${BUILD_ARCH} alpine:3.13 as env-builder
 
 # Install dependencies
 COPY official-pgadmin4/requirements.txt /
-RUN     apk add --no-cache \
+RUN  apk update && \
+        apk add --no-cache \
         make \
         python3 \
         py3-pip && \
