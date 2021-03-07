@@ -14,7 +14,7 @@ ARG BUILD_ARCH=aarch64
 #########################################################################
 # Next, create the base environment for Python
 #########################################################################
-FROM --platform=${BUILD_ARCH} alpine:3.13 as env-builder
+FROM --platform=${BUILD_ARCH} ${BUILD_FROM} as env-builder
 
 # Install dependencies
 COPY official-pgadmin4/requirements.txt /
