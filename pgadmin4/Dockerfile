@@ -14,7 +14,7 @@ ARG BUILD_ARCH=aarch64
 #########################################################################
 # Next, create the base environment for Python
 #########################################################################
-FROM --platform=${BUILD_ARCH} ${BUILD_FROM} as env-builder
+FROM --platform=${BUILD_ARCH} alpine:3.13 as env-builder
 
 # Install dependencies
 COPY official-pgadmin4/requirements.txt /
@@ -31,6 +31,7 @@ RUN  apk update && \
         krb5-dev \
         rust \
         cargo \
+        qemu \
         python3-dev && \
     python3 -m venv --system-site-packages --without-pip /venv && \
     /venv/bin/python3 -m pip install --no-cache-dir -r requirements.txt && \
