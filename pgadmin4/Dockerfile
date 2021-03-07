@@ -12,6 +12,31 @@ ARG BUILD_ARCH=aarch64
 #########################################################################
 
 #########################################################################
+# Next, create the base environment for Python
+#########################################################################
+FROM --platform=${BUILD_ARCH} alpine:3.13 as env-builder
+
+# Install dependencies
+COPY official-pgadmin4/requirements.txt /
+RUN     apk add --no-cache \
+        make \
+        python3 \
+        py3-pip && \
+        apk add --no-cache --virtual build-deps \
+        build-base \
+        openssl-dev \
+        libffi-dev \
+        postgresql-dev \
+        krb5-dev \
+        rust \
+        cargo \
+        python3-dev && \
+    python3 -m venv --system-site-packages --without-pip /venv && \
+    /venv/bin/python3 -m pip install --no-cache-dir -r requirements.txt && \
+    apk del --no-cache build-deps
+
+
+#########################################################################
 # Create a Node container which will be used to build the JS components
 # and clean up the web/ source code
 #########################################################################
@@ -59,30 +84,6 @@ RUN yarn install && \
            karma.conf.js \
            ./pgadmin/static/js/generated/.cache
 
-#########################################################################
-# Next, create the base environment for Python
-#########################################################################
-
-FROM --platform=${BUILD_ARCH} alpine:3.12 as env-builder
-
-# Install dependencies
-COPY official-pgadmin4/requirements.txt /
-RUN     apk add --no-cache \
-        make \
-        python3 \
-        py3-pip && \
-        apk add --no-cache --virtual build-deps \
-        build-base \
-        openssl-dev \
-        libffi-dev \
-        postgresql-dev \
-        krb5-dev \
-        rust \
-        cargo \
-        python3-dev && \
-    python3 -m venv --system-site-packages --without-pip /venv && \
-    /venv/bin/python3 -m pip install --no-cache-dir -r requirements.txt && \
-    apk del --no-cache build-deps
 
 #########################################################################
 # Now, create a documentation build container for the Sphinx docs
