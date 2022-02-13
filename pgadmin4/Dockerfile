@@ -1,4 +1,5 @@
-ARG BUILD_FROM=ghcr.io/hassio-addons/base/aarch64:9.2.0
+
+ARG BUILD_FROM=ghcr.io/hassio-addons/base/aarch64:11.0.1
 ARG BUILD_ARCH=aarch64
 
 #Source: https://github.com/postgres/pgadmin4/blob/master/Dockerfile
@@ -11,38 +12,7 @@ ARG BUILD_ARCH=aarch64
 #
 #########################################################################
 
-#########################################################################
-# Next, create the base environment for Python
-#########################################################################
-FROM $BUILD_FROM as env-builder
-
-# Install dependencies
-COPY official-pgadmin4/requirements.txt /
-RUN  apk update && \
-       apk add --no-cache \
-       make \
-       python3 \
-       py3-pip && \
-        apk add --no-cache --virtual build-deps \
-        build-base \
-        openssl-dev \
-        libffi-dev \
-        postgresql-dev \
-        krb5-dev \
-        rust \
-        cargo \
-        python3-dev && \
-    python3 -m venv --system-site-packages --without-pip /venv && \
-    /venv/bin/python3 -m pip install --no-cache-dir -r requirements.txt && \
-    apk del --no-cache build-deps
-
-
-#########################################################################
-# Create a Node container which will be used to build the JS components
-# and clean up the web/ source code
-#########################################################################
-
-FROM alpine:3.13 AS app-builder
+FROM alpine:3.15 as app-builder
 
 RUN apk add --no-cache \
     autoconf \
@@ -74,7 +44,8 @@ RUN rm -rf /pgadmin4/web/*.log \
 WORKDIR /pgadmin4/web
 
 # Build the JS vendor code in the app-builder, and then remove the vendor source.
-RUN yarn install && \
+RUN export CPPFLAGS="-DPNG_ARM_NEON_OPT=0" && \
+    yarn install && \
     yarn run bundle && \
     rm -rf node_modules \
            yarn.lock \
@@ -85,10 +56,38 @@ RUN yarn install && \
            karma.conf.js \
            ./pgadmin/static/js/generated/.cache
 
+#########################################################################
+# Next, create the base environment for Python
+#########################################################################
+
+FROM --platform=${BUILD_ARCH} alpine:3.15 as env-builder
+
+# Install dependencies
+COPY official-pgadmin4/requirements.txt /
+RUN     apk add --no-cache \
+        make \
+        python3 \
+        py3-pip && \
+    apk add --no-cache --virtual build-deps \
+        build-base \
+        openssl-dev \
+        libffi-dev \
+        postgresql-dev \
+        krb5-dev \
+        rust \
+        cargo \
+        zlib-dev \
+        libjpeg-turbo-dev \
+        libpng-dev \
+        python3-dev && \
+    python3 -m venv --system-site-packages --without-pip /venv && \
+    /venv/bin/python3 -m pip install --no-cache-dir -r requirements.txt && \
+    apk del --no-cache build-deps
 
 #########################################################################
 # Now, create a documentation build container for the Sphinx docs
 #########################################################################
+
 FROM env-builder as docs-builder
 
 # Install Sphinx
@@ -112,20 +111,15 @@ RUN rm -rf /pgadmin4/docs/en_US/_build/html/_static/*.png
 # Create additional builders to get all of the PostgreSQL utilities
 #########################################################################
 
-FROM --platform=${BUILD_ARCH} postgres:9.6-alpine as pg96-builder
 FROM --platform=${BUILD_ARCH} postgres:10-alpine as pg10-builder
 FROM --platform=${BUILD_ARCH} postgres:11-alpine as pg11-builder
 FROM --platform=${BUILD_ARCH} postgres:12-alpine as pg12-builder
 FROM --platform=${BUILD_ARCH} postgres:13-alpine as pg13-builder
+FROM --platform=${BUILD_ARCH} postgres:14-alpine as pg14-builder
 
-FROM --platform=${BUILD_ARCH} alpine:3.13 as tool-builder
+FROM --platform=${BUILD_ARCH} alpine:3.15 as tool-builder
 
 # Copy the PG binaries
-COPY --from=pg96-builder /usr/local/bin/pg_dump /usr/local/pgsql/pgsql-9.6/
-COPY --from=pg96-builder /usr/local/bin/pg_dumpall /usr/local/pgsql/pgsql-9.6/
-COPY --from=pg96-builder /usr/local/bin/pg_restore /usr/local/pgsql/pgsql-9.6/
-COPY --from=pg96-builder /usr/local/bin/psql /usr/local/pgsql/pgsql-9.6/
-
 COPY --from=pg10-builder /usr/local/bin/pg_dump /usr/local/pgsql/pgsql-10/
 COPY --from=pg10-builder /usr/local/bin/pg_dumpall /usr/local/pgsql/pgsql-10/
 COPY --from=pg10-builder /usr/local/bin/pg_restore /usr/local/pgsql/pgsql-10/
@@ -146,15 +140,24 @@ COPY --from=pg13-builder /usr/local/bin/pg_dumpall /usr/local/pgsql/pgsql-13/
 COPY --from=pg13-builder /usr/local/bin/pg_restore /usr/local/pgsql/pgsql-13/
 COPY --from=pg13-builder /usr/local/bin/psql /usr/local/pgsql/pgsql-13/
 
+COPY --from=pg14-builder /usr/local/bin/pg_dump /usr/local/pgsql/pgsql-14/
+COPY --from=pg14-builder /usr/local/bin/pg_dumpall /usr/local/pgsql/pgsql-14/
+COPY --from=pg14-builder /usr/local/bin/pg_restore /usr/local/pgsql/pgsql-14/
+COPY --from=pg14-builder /usr/local/bin/psql /usr/local/pgsql/pgsql-14/
+
 #########################################################################
 # Assemble everything into the final container.
 #########################################################################
 FROM $BUILD_FROM
+
 # Copy in the Python packages
 COPY --from=env-builder /venv /venv
 
 # Copy in the tools
 COPY --from=tool-builder /usr/local/pgsql /usr/local/
+COPY --from=pg14-builder /usr/local/lib/libpq.so.5.14 /usr/lib/
+RUN ln -s libpq.so.5.14 /usr/lib/libpq.so.5 && \
+    ln -s libpq.so.5.14 /usr/lib/libpq.so
 
 WORKDIR /pgadmin4
 ENV PYTHONPATH=/pgadmin4
@@ -175,11 +178,12 @@ RUN apk add \
         python3 \
         py3-pip \
         postfix \
-        postgresql-libs \
         krb5-libs \
+        libjpeg-turbo \
         shadow \
         sudo \
         libedit \
+        libldap \
         libcap && \
     /venv/bin/python3 -m pip install --no-cache-dir gunicorn && \
     find / -type d -name '__pycache__' -exec rm -rf {} + && \
@@ -189,16 +193,14 @@ RUN apk add \
     chown pgadmin:pgadmin /var/lib/pgadmin && \
     touch /pgadmin4/config_distro.py && \
     chown pgadmin:pgadmin /pgadmin4/config_distro.py && \
-    setcap CAP_NET_BIND_SERVICE=+eip /usr/bin/python3.8 && \
+    setcap CAP_NET_BIND_SERVICE=+eip /usr/bin/python3.9 && \
     echo "pgadmin ALL = NOPASSWD: /usr/sbin/postfix start" > /etc/sudoers.d/postfix
-
 
 # --------------------------------------
 # Finish image (Different from official pgAdmin)
 # --------------------------------------
 # Precompile and optimize python code to save time and space on startup
 RUN /venv/bin/python3 -O -m compileall -x node_modules /pgadmin4
-
 
 # Install NGINX for Ingress support
 RUN \

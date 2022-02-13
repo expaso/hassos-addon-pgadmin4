@@ -1,6 +1,6 @@
 # Local development
 
-To build the lastest version using local docker, sswitch to the folder where the `dockerfile` resides, and run:
+To build the lastest version using local docker, switch to the folder where the `dockerfile` resides, and run:
 
 ```
 docker build --tag husselhans/hassos-addon-pgadmin4-aarch64:dev .
@@ -8,7 +8,7 @@ docker build --tag husselhans/hassos-addon-pgadmin4-aarch64:dev .
 The dockerfile already contains the default build architecture and the default base image:
 
 ```
-ARG BUILD_FROM=ghcr.io/hassio-addons/base/aarch64:9.2.0
+ARG BUILD_FROM=ghcr.io/hassio-addons/base/aarch64:11.0.1
 ARG BUILD_ARCH=aarch64
 ```
 
@@ -23,5 +23,5 @@ To build the latest version using the HomeAssistant Addon Builder container, for
 docker run --rm --privileged -v ~/.docker:/root/.docker -v ~/hassos-addon-pgadmin4/pgadmin4:/data homeassistant/amd64-builder --target pgadmin4 --aarch64 -t /data
 ```
 
-This will use the base images from the `build.json` file, and the architecture specified. Use `--all` instead of `--aarch64`  to build all architectures withih the `config.json`for example.
+This will use the base images from the `build.json` file, and the architecture specified. Use `--all` instead of `--aarch64`  to build all architectures within the `config.json`for example.
 
