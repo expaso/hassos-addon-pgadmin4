@@ -1,11 +1,11 @@
 diff --git a/pgAdmin4.py b/pgAdmin4.py
-index d2bd1af6f..a559f0b5a 100644
+index 6de0bddcc..89a215493 100644
 --- a/pgAdmin4.py
 +++ b/pgAdmin4.py
-@@ -97,8 +97,7 @@ if not os.path.isfile(config.SQLITE_PATH):
- ##########################################################################
- app = create_app()
+@@ -99,8 +99,7 @@ app = create_app()
  app.debug = False
+ app.config['sessions'] = dict()
+ 
 -if config.SERVER_MODE:
 -    app.wsgi_app = ReverseProxied(app.wsgi_app)
 +app.wsgi_app = ReverseProxied(app.wsgi_app)
@@ -13,10 +13,10 @@ index d2bd1af6f..a559f0b5a 100644
  # Authentication sources
  if len(config.AUTHENTICATION_SOURCES) > 0:
 diff --git a/pgadmin/__init__.py b/pgadmin/__init__.py
-index a73335371..0bc6a23a9 100644
+index 19befe9f5..89e277419 100644
 --- a/pgadmin/__init__.py
 +++ b/pgadmin/__init__.py
-@@ -111,13 +111,12 @@ class PgAdmin(Flask):
+@@ -124,13 +124,12 @@ class PgAdmin(Flask):
          #############################################################
          import config
          is_wsgi_root_present = False
