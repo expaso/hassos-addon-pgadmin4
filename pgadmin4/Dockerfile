@@ -41,6 +41,20 @@ RUN rm -rf /pgadmin4/web/*.log \
            `find /pgadmin4/web -type d -name tests` \
            `find /pgadmin4/web -type f -name .DS_Store`
 
+#### PATCH SOURCES ####
+# Patch pgadmin-files to allow reverse proxying in desktop mode.
+# This is needed to support ingress (which is on a deeper path below root)
+# We want to run pfAdmin in desktop-mode (no users), because we would like to handle users and authentication ourselves.
+# Problem is, in desktop mode, reverse-propxying is not respected.
+# And so we patch the files to enale this behaviour again.
+#sed -i '105s/config.SERVER_MODE/True/' /pgadmin4/pgadmin/__init__.py    #Line 105: Assume server-mode here to enable reverse-proxy
+#sed -i '95s/config.SERVER_MODE/True/' /pgadmin4/pgAdmin4.py             #Line 94: Assume server-mode here to enable reverse-proxy
+#######################
+COPY patches/pgAdmin.patch /pgadmin4
+WORKDIR /pgadmin4
+RUN git apply -v pgAdmin.patch
+#######################
+
 WORKDIR /pgadmin4/web
 
 # Build the JS vendor code in the app-builder, and then remove the vendor source.
@@ -68,7 +82,7 @@ RUN     apk add --no-cache \
         make \
         python3 \
         py3-pip && \
-    apk add --no-cache --virtual build-deps \
+        apk add --no-cache --virtual build-deps \
         build-base \
         openssl-dev \
         libffi-dev \
@@ -168,6 +182,19 @@ COPY --from=docs-builder /pgadmin4/docs/en_US/_build/html/ /pgadmin4/docs
 COPY official-pgadmin4/pkg/docker/run_pgadmin.py /pgadmin4
 COPY official-pgadmin4/pkg/docker/gunicorn_config.py /pgadmin4
 COPY official-pgadmin4/pkg/docker/entrypoint.sh /entrypoint.sh
+
+#### PATCH SOURCES ####
+# Patch pgadmin-files to allow reverse proxying in desktop mode.
+# This is needed to support ingress (which is on a deeper path below root)
+# We want to run pfAdmin in desktop-mode (no users), because we would like to handle users and authentication ourselves.
+# Problem is, in desktop mode, reverse-propxying is not respected.
+# And so we patch the files to enale this behaviour again.
+#sed -i '105s/config.SERVER_MODE/True/' /pgadmin4/pgadmin/__init__.py    #Line 105: Assume server-mode here to enable reverse-proxy
+#sed -i '95s/config.SERVER_MODE/True/' /pgadmin4/pgAdmin4.py             #Line 94: Assume server-mode here to enable reverse-proxy
+#######################
+COPY patches/pgAdmin.patch /pgadmin4
+RUN git apply -v pgAdmin.patch
+#######################
 
 # License files
 COPY official-pgadmin4/LICENSE /pgadmin4/LICENSE

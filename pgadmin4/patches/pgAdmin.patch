@@ -1,7 +1,7 @@
-diff --git a/pgAdmin4.py b/pgAdmin4.py
+diff --git a/web/pgAdmin4.py b/web/pgAdmin4.py
 index 6de0bddcc..89a215493 100644
---- a/pgAdmin4.py
-+++ b/pgAdmin4.py
+--- a/web/pgAdmin4.py
++++ b/web/pgAdmin4.py
 @@ -99,8 +99,7 @@ app = create_app()
  app.debug = False
  app.config['sessions'] = dict()
@@ -12,10 +12,10 @@ index 6de0bddcc..89a215493 100644
  
  # Authentication sources
  if len(config.AUTHENTICATION_SOURCES) > 0:
-diff --git a/pgadmin/__init__.py b/pgadmin/__init__.py
+diff --git a/web/pgadmin/__init__.py b/web/pgadmin/__init__.py
 index 19befe9f5..89e277419 100644
---- a/pgadmin/__init__.py
-+++ b/pgadmin/__init__.py
+--- a/web/pgadmin/__init__.py
++++ b/web/pgadmin/__init__.py
 @@ -124,13 +124,12 @@ class PgAdmin(Flask):
          #############################################################
          import config
@@ -36,10 +36,10 @@ index 19befe9f5..89e277419 100644
  
          def get_full_url_path(url):
              """
-diff --git a/pgadmin/browser/server_groups/servers/static/js/server.ui.js b/pgadmin/browser/server_groups/servers/static/js/server.ui.js
+diff --git a/web/pgadmin/browser/server_groups/servers/static/js/server.ui.js b/web/pgadmin/browser/server_groups/servers/static/js/server.ui.js
 index c197bd3e9..0e6e88293 100644
---- a/pgadmin/browser/server_groups/servers/static/js/server.ui.js
-+++ b/pgadmin/browser/server_groups/servers/static/js/server.ui.js
+--- a/web/pgadmin/browser/server_groups/servers/static/js/server.ui.js
++++ b/web/pgadmin/browser/server_groups/servers/static/js/server.ui.js
 @@ -86,7 +86,7 @@ export default class ServerSchema extends BaseUISchema {
    }
  
