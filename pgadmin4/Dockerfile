@@ -183,19 +183,6 @@ COPY official-pgadmin4/pkg/docker/run_pgadmin.py /pgadmin4
 COPY official-pgadmin4/pkg/docker/gunicorn_config.py /pgadmin4
 COPY official-pgadmin4/pkg/docker/entrypoint.sh /entrypoint.sh
 
-#### PATCH SOURCES ####
-# Patch pgadmin-files to allow reverse proxying in desktop mode.
-# This is needed to support ingress (which is on a deeper path below root)
-# We want to run pfAdmin in desktop-mode (no users), because we would like to handle users and authentication ourselves.
-# Problem is, in desktop mode, reverse-propxying is not respected.
-# And so we patch the files to enale this behaviour again.
-#sed -i '105s/config.SERVER_MODE/True/' /pgadmin4/pgadmin/__init__.py    #Line 105: Assume server-mode here to enable reverse-proxy
-#sed -i '95s/config.SERVER_MODE/True/' /pgadmin4/pgAdmin4.py             #Line 94: Assume server-mode here to enable reverse-proxy
-#######################
-COPY patches/pgAdmin.patch /pgadmin4
-RUN git apply -v pgAdmin.patch
-#######################
-
 # License files
 COPY official-pgadmin4/LICENSE /pgadmin4/LICENSE
 COPY official-pgadmin4/DEPENDENCIES /pgadmin4/DEPENDENCIES
@@ -223,12 +210,6 @@ RUN apk add \
     setcap CAP_NET_BIND_SERVICE=+eip /usr/bin/python3.9 && \
     echo "pgadmin ALL = NOPASSWD: /usr/sbin/postfix start" > /etc/sudoers.d/postfix
 
-# --------------------------------------
-# Finish image (Different from official pgAdmin)
-# --------------------------------------
-# Precompile and optimize python code to save time and space on startup
-RUN /venv/bin/python3 -O -m compileall -x node_modules /pgadmin4
-
 # Install NGINX for Ingress support
 RUN \
     apk add --no-cache \
@@ -236,6 +217,25 @@ RUN \
         lua-resty-http \
         nginx-mod-http-lua \
         nginx
+
+#### PATCH SOURCES ####
+# Patch pgadmin-files to allow reverse proxying in desktop mode.
+# This is needed to support ingress (which is on a deeper path below root)
+# We want to run pfAdmin in desktop-mode (no users), because we would like to handle users and authentication ourselves.
+# Problem is, in desktop mode, reverse-propxying is not respected.
+# And so we patch the files to enale this behaviour again.
+#sed -i '105s/config.SERVER_MODE/True/' /pgadmin4/pgadmin/__init__.py    #Line 105: Assume server-mode here to enable reverse-proxy
+#sed -i '95s/config.SERVER_MODE/True/' /pgadmin4/pgAdmin4.py             #Line 94: Assume server-mode here to enable reverse-proxy
+#######################
+COPY patches/pgAdmin.patch /pgadmin4
+RUN git apply -v pgAdmin.patch
+#######################
+
+# --------------------------------------
+# Finish image (Different from official pgAdmin)
+# --------------------------------------
+# Precompile and optimize python code to save time and space on startup
+RUN /venv/bin/python3 -O -m compileall -x node_modules /pgadmin4
 
 
 # Make sure that S6 is not so hard on our service startup/shutdown
