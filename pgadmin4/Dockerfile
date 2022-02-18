@@ -229,6 +229,7 @@ RUN \
 #######################
 WORKDIR /pgadmin4
 COPY patches/pgAdmin.patch /pgadmin4
+RUN cd /pgadmin4
 RUN git apply -v pgAdmin.patch
 #######################
 
