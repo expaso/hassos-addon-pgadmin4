@@ -28,7 +28,10 @@ RUN apk add --no-cache \
     nasm \
     nodejs \
     yarn \
-    zlib-dev
+    zlib-dev \
+    gcompat 
+# GCompat only needed for local docker builds instead of building through github-actione CI/CD
+
 
 # Create the /pgadmin4 directory and copy the source into it. Explicitly
 # remove the node_modules directory as we'll recreate a clean version, as well
@@ -217,22 +220,6 @@ RUN \
         lua-resty-http \
         nginx-mod-http-lua \
         nginx
-
-#### PATCH SOURCES ####
-# Patch pgadmin-files to allow reverse proxying in desktop mode.
-# This is needed to support ingress (which is on a deeper path below root)
-# We want to run pfAdmin in desktop-mode (no users), because we would like to handle users and authentication ourselves.
-# Problem is, in desktop mode, reverse-propxying is not respected.
-# And so we patch the files to enale this behaviour again.
-#sed -i '105s/config.SERVER_MODE/True/' /pgadmin4/pgadmin/__init__.py    #Line 105: Assume server-mode here to enable reverse-proxy
-#sed -i '95s/config.SERVER_MODE/True/' /pgadmin4/pgAdmin4.py             #Line 94: Assume server-mode here to enable reverse-proxy
-#######################
-WORKDIR /pgadmin4
-COPY patches/pgAdmin.patch /pgadmin4
-RUN cd /pgadmin4
-RUN git apply -v pgAdmin.patch
-#######################
-
 # --------------------------------------
 # Finish image (Different from official pgAdmin)
 # --------------------------------------
