@@ -62,7 +62,7 @@ WORKDIR /pgadmin4/web
 
 # Build the JS vendor code in the app-builder, and then remove the vendor source.
 RUN export CPPFLAGS="-DPNG_ARM_NEON_OPT=0" && \
-    yarn install && \
+    yarn install --network-timeout 1000000000 && \
     yarn run bundle && \
     rm -rf node_modules \
            yarn.lock \
