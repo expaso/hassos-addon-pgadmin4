@@ -31,7 +31,7 @@ jobs:
             -v ~/.docker:/root/.docker \
             -v /var/run/docker.sock:/var/run/docker.sock \
             -v "$(pwd)":/data homeassistant/amd64-builder \
-            --target pgadmin4 --aarch64 \
+            --target pgadmin4 --all \
             --docker-user ${{ secrets.DOCKER_USERNAME }} \
             --docker-password ${{ secrets.DOCKER_PASSWORD }}
 
