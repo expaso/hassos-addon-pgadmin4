@@ -1,0 +1,9 @@
+diff --git a/requirements.txt b/requirements.txt
+index 0a6471ea8..e6da55f6d 100644
+--- a/requirements.txt
++++ b/requirements.txt
+@@ -49,3 +49,4 @@ Pillow==9.*; python_version >= '3.7'
+ boto3==1.20.*
+ botocore==1.23.*
+ urllib3==1.26.*
++werkzeug~=2.0.0

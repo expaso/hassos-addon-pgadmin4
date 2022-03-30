@@ -81,6 +81,19 @@ FROM --platform=${BUILD_ARCH} alpine:3.15 as env-builder
 
 # Install dependencies
 COPY official-pgadmin4/requirements.txt /
+
+#### PATCH SOURCES ####
+# Patch pgadmin-files to allow reverse proxying in desktop mode.
+# This is needed to support ingress (which is on a deeper path below root)
+# We want to run pfAdmin in desktop-mode (no users), because we would like to handle users and authentication ourselves.
+# Problem is, in desktop mode, reverse-propxying is not respected.
+# And so we patch the files to enale this behaviour again.
+#######################
+COPY patches/requirements.patch /
+WORKDIR /
+RUN git apply -v requirements.patch
+#######################
+
 RUN     apk add --no-cache \
         make \
         python3 \
