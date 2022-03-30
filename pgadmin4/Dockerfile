@@ -77,7 +77,7 @@ RUN export CPPFLAGS="-DPNG_ARM_NEON_OPT=0" && \
 # Next, create the base environment for Python
 #########################################################################
 
-FROM --platform=${BUILD_ARCH} alpine:3.15 as env-builder
+FROM --platform=${TARGETPLATFORM} alpine:3.15 as env-builder
 
 # Install dependencies
 COPY official-pgadmin4/requirements.txt /
@@ -141,13 +141,13 @@ RUN rm -rf /pgadmin4/docs/en_US/_build/html/_static/*.png
 # Create additional builders to get all of the PostgreSQL utilities
 #########################################################################
 
-FROM --platform=${BUILD_ARCH} postgres:10-alpine as pg10-builder
-FROM --platform=${BUILD_ARCH} postgres:11-alpine as pg11-builder
-FROM --platform=${BUILD_ARCH} postgres:12-alpine as pg12-builder
-FROM --platform=${BUILD_ARCH} postgres:13-alpine as pg13-builder
-FROM --platform=${BUILD_ARCH} postgres:14-alpine as pg14-builder
+FROM --platform=${TARGETPLATFORM} postgres:10-alpine as pg10-builder
+FROM --platform=${TARGETPLATFORM} postgres:11-alpine as pg11-builder
+FROM --platform=${TARGETPLATFORM} postgres:12-alpine as pg12-builder
+FROM --platform=${TARGETPLATFORM} postgres:13-alpine as pg13-builder
+FROM --platform=${TARGETPLATFORM} postgres:14-alpine as pg14-builder
 
-FROM --platform=${BUILD_ARCH} alpine:3.15 as tool-builder
+FROM --platform=${TARGETPLATFORM} alpine:3.15 as tool-builder
 
 # Copy the PG binaries
 COPY --from=pg10-builder /usr/local/bin/pg_dump /usr/local/pgsql/pgsql-10/
