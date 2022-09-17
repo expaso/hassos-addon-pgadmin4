@@ -1,5 +1,5 @@
 
-ARG BUILD_FROM=ghcr.io/hassio-addons/base/aarch64:11.1.1
+ARG BUILD_FROM=ghcr.io/hassio-addons/base/aarch64:12.2.4
 ARG BUILD_ARCH=aarch64
 
 #Source: https://github.com/postgres/pgadmin4/blob/master/Dockerfile
@@ -81,18 +81,6 @@ FROM alpine:3.15 as env-builder
 
 # Install dependencies
 COPY official-pgadmin4/requirements.txt /
-
-#### PATCH SOURCES ####
-# Patch pgadmin-files to allow reverse proxying in desktop mode.
-# This is needed to support ingress (which is on a deeper path below root)
-# We want to run pfAdmin in desktop-mode (no users), because we would like to handle users and authentication ourselves.
-# Problem is, in desktop mode, reverse-propxying is not respected.
-# And so we patch the files to enale this behaviour again.
-#######################
-COPY patches/requirements.patch /
-WORKDIR /
-RUN git apply -v requirements.patch
-#######################
 
 RUN     apk add --no-cache \
         make \
@@ -239,13 +227,11 @@ RUN \
 # Precompile and optimize python code to save time and space on startup
 RUN /venv/bin/python3 -O -m compileall -x node_modules /pgadmin4
 
-
 # Make sure that S6 is not so hard on our service startup/shutdown
 ENV \
     S6_SERVICES_GRACETIME=18000
 
 # Copy data
 COPY rootfs /
-
 
 WORKDIR /
