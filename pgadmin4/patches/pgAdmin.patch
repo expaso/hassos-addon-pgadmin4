@@ -29,3 +29,10 @@ index 978278ecd..0b66bd1ad 100644
 -                )
 +        pgadmin_root_path = url_for('browser.index')
 +        if pgadmin_root_path != '/browser/':
++            is_wsgi_root_present = True
++            wsgi_root_path = pgadmin_root_path.replace(
++                '/browser/', ''
++            )
+ 
+         def get_full_url_path(url):
+             """
