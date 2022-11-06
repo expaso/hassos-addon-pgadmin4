@@ -230,8 +230,14 @@ RUN /venv/bin/python3 -O -m compileall -x node_modules /pgadmin4
 # Make sure that S6 is not so hard on our service startup/shutdown
 ENV \
     S6_SERVICES_GRACETIME=18000
+ENV \
+    S6_CMD_WAIT_FOR_SERVICES_MAXTIME=50000
 
 # Copy data
-COPY rootfs /
+COPY  rootfs /
+RUN chmod +x /etc/cont-init.d/* \
+    && chmod +x /etc/services.d/nginx/* \
+    && chmod +x /etc/services.d/pgadmin4/*
+
 
 WORKDIR /
