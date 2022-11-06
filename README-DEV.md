@@ -25,3 +25,14 @@ docker run --rm --privileged -v ~/.docker:/root/.docker -v ~/hassos-addon-pgadmi
 
 This will use the base images from the `build.json` file, and the architecture specified. Use `--all` instead of `--aarch64`  to build all architectures within the `config.json`for example.
 
+## Push latest DEV image to repository
+
+docker image push husselhans/hassos-addon-pgadmin4-aarch64:dev
+
+## Run the addon with an interactive shell
+
+From a system SSH (port 22222), run the docker container with data attached:
+
+```
+docker run -it --entrypoint "/bin/sh" -v /mnt/data/supervisor/addons/data/local_pgadmin4/:/data:rw  husselhans/hassos-addon-pgadmin4-aarch64:dev
+```

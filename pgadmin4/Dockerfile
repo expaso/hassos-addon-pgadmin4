@@ -7,12 +7,12 @@ ARG BUILD_ARCH=aarch64
 #
 # pgAdmin 4 - PostgreSQL Tools
 #
-# Copyright (C) 2013 - 2018, The pgAdmin Development Team
+# Copyright (C) 2013 - 2022, The pgAdmin Development Team
 # This software is released under the PostgreSQL Licence
 #
 #########################################################################
 
-FROM alpine:3.15 as app-builder
+FROM alpine:3.16 as app-builder
 
 RUN apk add --no-cache \
     autoconf \
@@ -77,7 +77,7 @@ RUN export CPPFLAGS="-DPNG_ARM_NEON_OPT=0" && \
 # Next, create the base environment for Python
 #########################################################################
 
-FROM alpine:3.15 as env-builder
+FROM alpine:3.16 as env-builder
 
 # Install dependencies
 COPY official-pgadmin4/requirements.txt /
@@ -135,7 +135,7 @@ FROM postgres:12-alpine as pg12-builder
 FROM postgres:13-alpine as pg13-builder
 FROM postgres:14-alpine as pg14-builder
 
-FROM alpine:3.15 as tool-builder
+FROM alpine:3.16 as tool-builder
 
 # Copy the PG binaries
 COPY --from=pg10-builder /usr/local/bin/pg_dump /usr/local/pgsql/pgsql-10/
@@ -203,7 +203,7 @@ RUN apk add \
         libedit \
         libldap \
         libcap && \
-    /venv/bin/python3 -m pip install --no-cache-dir gunicorn flask && \
+    /venv/bin/python3 -m pip install --no-cache-dir pip install --no-cache-dir gunicorn && \
     find / -type d -name '__pycache__' -exec rm -rf {} + && \
     groupadd -g 5050 pgadmin && \
     useradd -r -u 5050 -g pgadmin pgadmin && \

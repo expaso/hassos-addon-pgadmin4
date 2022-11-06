@@ -4,7 +4,6 @@
 # runs pgAdmin4 (see official-pgadmin4/pkg/docker/entrypoint.sh )
 # ==============================================================================
 
-
 declare timeout
 declare pgadmin_pid
 
