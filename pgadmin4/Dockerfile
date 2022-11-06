@@ -1,5 +1,5 @@
 
-ARG BUILD_FROM=ghcr.io/hassio-addons/base/aarch64:12.2.4
+ARG BUILD_FROM=ghcr.io/hassio-addons/base/aarch64:12.2.5
 ARG BUILD_ARCH=aarch64
 
 #Source: https://github.com/postgres/pgadmin4/blob/master/Dockerfile
@@ -203,7 +203,7 @@ RUN apk add \
         libedit \
         libldap \
         libcap && \
-    /venv/bin/python3 -m pip install --no-cache-dir gunicorn && \
+    /venv/bin/python3 -m pip install --no-cache-dir gunicorn flask && \
     find / -type d -name '__pycache__' -exec rm -rf {} + && \
     groupadd -g 5050 pgadmin && \
     useradd -r -u 5050 -g pgadmin pgadmin && \
