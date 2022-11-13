@@ -12,7 +12,14 @@ ARG BUILD_FROM=ghcr.io/hassio-addons/base/aarch64:11.0.1
 ARG BUILD_ARCH=aarch64
 ```
 
+This can also be done by passing the build-arguments by the commandline:
+```
+docker build --tag husselhans/hassos-addon-pgadmin4-armv7:dev . --build-arg BUILD_FROM=ghcr.io/hassio-addons/base/armv7:12.2.6
+```
+
+
 Hereafter, you can push the image to dockerhub using cmd of docker desktop for testing purposes.
+
 
 
 ## Build using Home Asssitant Builder
