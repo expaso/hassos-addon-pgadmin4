@@ -12,7 +12,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
 
       - name: Checkout submodules
         shell: bash
@@ -25,8 +25,8 @@ jobs:
 
       - name: Build image
         run: |
-          sed -i "s/dev/latest/g" pgadmin4/config.json
-          sed -i "s/imageaftercd/image/g" pgadmin4/config.json
+          sed -i "s/dev/latest/g" pgadmin4/config.yaml
+          sed -i "s/imageaftercd/image/g" pgadmin4/config.yaml
           docker run --rm --privileged \
             -v ~/.docker:/root/.docker \
             -v /var/run/docker.sock:/var/run/docker.sock \

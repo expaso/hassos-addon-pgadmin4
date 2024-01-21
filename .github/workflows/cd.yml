@@ -57,10 +57,10 @@ jobs:
   #         ADDON_NAME=$( cut -c21- <<< ${{ github.repository }} )
   #         ADDON_VERSION=$( cut -c12- <<< ${{ github.ref }} )
   #         mkdir -p repository/pgadmin4
-  #         cp -v addon/README.md addon/pgadmin4/config.json addon/pgadmin4/*.png  repository/pgadmin4
+  #         cp -v addon/README.md addon/pgadmin4/config.yaml addon/pgadmin4/*.png  repository/pgadmin4
   #         cd repository
-  #         sed -i "s/dev/$ADDON_VERSION/g" pgadmin4/config.json
-  #         sed -i "s/imageaftercd/image/g" pgadmin4/config.json
+  #         sed -i "s/dev/$ADDON_VERSION/g" pgadmin4/config.yaml
+  #         sed -i "s/imageaftercd/image/g" pgadmin4/config.yaml
   #         git config --local user.email "hans@expaso.nl"
   #         git config --local user.name "Hans van Essen"
   #         git add .
