@@ -117,3 +117,6 @@ TEST_SQLITE_PATH = os.path.join(DATA_DIR, 'test_pgadmin4.db')
 # Applicable for desktop mode only
 ##########################################################################
 MASTER_PASSWORD_REQUIRED = False
+
+# Disables the 'there is a new version' message.
+UPGRADE_CHECK_ENABLED = False
