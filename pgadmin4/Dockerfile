@@ -103,7 +103,7 @@ RUN     apk add --no-cache \
         libpng-dev \
         python3-dev && \
     python3 -m venv --system-site-packages --without-pip /venv && \
-    /venv/bin/python3 -m pip install --no-cache-dir setuptools && \
+    #/venv/bin/python3 -m pip install --no-cache-dir setuptools && \
     /venv/bin/python3 -m pip install --no-cache-dir -r requirements.txt && \
     apk del --no-cache build-deps
 
