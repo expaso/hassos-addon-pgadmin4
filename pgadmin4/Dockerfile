@@ -1,5 +1,4 @@
 ARG BUILD_FROM=ghcr.io/hassio-addons/base/aarch64:15.0.5
-ARG BUILD_ARCH=aarch64
 
 #Source: https://github.com/postgres/pgadmin4/blob/master/Dockerfile
 ########################################################################
@@ -11,27 +10,26 @@ ARG BUILD_ARCH=aarch64
 #
 #########################################################################
 
-FROM alpine:latest as app-builder
+FROM --platform=$BUILDPLATFORM alpine:latest as app-builder
 
-RUN apk add --no-cache \
-    autoconf \
-    automake \
-    bash \
-    g++ \
-    git \
-    libc6-compat \
-    libjpeg-turbo-dev \
-    libpng-dev \
-    libtool \
-    make \
-    nasm \
-    nodejs \
-    npm \
-    yarn \
-    zlib-dev \
-    gcompat
-# GCompat only needed for local docker builds instead of building through github-actione CI/CD
-
+RUN \
+    --mount=type=cache,id=apk,sharing=locked,target=/var/cache/apk \
+    apk add \
+        autoconf \
+        automake \
+        bash \
+        g++ \
+        git \
+        libc6-compat \
+        libjpeg-turbo-dev \
+        libpng-dev \
+        libtool \
+        make \
+        nasm \
+        nodejs \
+        npm \
+        yarn \
+        zlib-dev
 
 # Create the /pgadmin4 directory and copy the source into it. Explicitly
 # remove the node_modules directory as we'll recreate a clean version, as well
@@ -61,20 +59,23 @@ RUN git apply -v pgAdmin.patch
 WORKDIR /pgadmin4/web
 
 # Build the JS vendor code in the app-builder, and then remove the vendor source.
-RUN export CPPFLAGS="-DPNG_ARM_NEON_OPT=0" && \
-    yarn set version berry && \
-    yarn set version 3 && \
-    yarn install && \
-    yarn run bundle && \
-    rm -rf node_modules \
-           yarn.lock \
-           package.json \
-           .[^.]* \
-           babel.cfg \
-           webpack.* \
-           jest.config.js \
-           babel.* \
-           ./pgadmin/static/js/generated/.cache
+RUN \
+    --mount=type=cache,id=yarn,sharing=locked,target=/root/.yarn \
+    export YARN_CACHE_FOLDER=/root/.yarn && \
+    export CPPFLAGS="-DPNG_ARM_NEON_OPT=0" && \
+        yarn set version berry && \
+        yarn set version 3 && \
+        yarn install && \
+        yarn run bundle && \
+        rm -rf node_modules \
+            yarn.lock \
+            package.json \
+            .[^.]* \
+            babel.cfg \
+            webpack.* \
+            jest.config.js \
+            babel.* \
+            ./pgadmin/static/js/generated/.cache
 
 #########################################################################
 # Next, create the base environment for Python
@@ -85,27 +86,31 @@ FROM alpine:latest as env-builder
 # Install dependencies
 COPY official-pgadmin4/requirements.txt /
 
-RUN     apk add --no-cache \
-        make \
-        python3 \
-        py3-pip && \
-        apk add --no-cache --virtual build-deps \
-        build-base \
-        openssl-dev \
-        libffi-dev \
-        postgresql-dev \
-        krb5-dev \
-        rust \
-        git \
-        cargo \
-        zlib-dev \
-        libjpeg-turbo-dev \
-        libpng-dev \
-        python3-dev && \
-    python3 -m venv --system-site-packages --without-pip /venv && \
-    #/venv/bin/python3 -m pip install --no-cache-dir setuptools && \
-    /venv/bin/python3 -m pip install --no-cache-dir -r requirements.txt && \
-    apk del --no-cache build-deps
+RUN \
+    --mount=type=cache,id=apk-$TARGETPLATFORM,sharing=locked,target=/var/cache/apk \
+        apk add \
+            make \
+            python3 \
+            py3-pip && \
+        apk add --virtual build-deps \
+            build-base \
+            openssl-dev \
+            libffi-dev \
+            postgresql-dev \
+            krb5-dev \
+            rust \
+            git \
+            cargo \
+            zlib-dev \
+            libjpeg-turbo-dev \
+            libpng-dev \
+            python3-dev
+RUN \
+    --mount=type=cache,id=pip-$TARGETPLATFORM,sharing=locked,target=/root/.cache \
+        python3 -m venv --system-site-packages --without-pip /venv && \
+        #/venv/bin/python3 -m pip install setuptools && \
+        /venv/bin/python3 -m pip install -r requirements.txt && \
+        apk del build-deps
 
 #########################################################################
 # Now, create a documentation build container for the Sphinx docs
@@ -114,8 +119,10 @@ RUN     apk add --no-cache \
 FROM env-builder as docs-builder
 
 # Install Sphinx
-RUN /venv/bin/python3 -m pip install --no-cache-dir sphinx
-RUN /venv/bin/python3 -m pip install --no-cache-dir sphinxcontrib-youtube
+RUN \
+    --mount=type=cache,id=pip-$TARGETPLATFORM,sharing=locked,target=/root/.cache \
+        /venv/bin/python3 -m pip install sphinx && \
+        /venv/bin/python3 -m pip install sphinxcontrib-youtube
 
 # Copy the docs from the local tree. Explicitly remove any existing builds that
 # may be present
@@ -204,7 +211,9 @@ COPY official-pgadmin4/LICENSE /pgadmin4/LICENSE
 COPY official-pgadmin4/DEPENDENCIES /pgadmin4/DEPENDENCIES
 
 # Install runtime dependencies and configure everything in one RUN step
-RUN apk add \
+RUN \
+    --mount=type=cache,id=apk-$TARGETPLATFORM,target=/var/cache/apk \
+    apk add \
         python3 \
         py3-pip \
         postfix \
@@ -215,20 +224,22 @@ RUN apk add \
         tzdata \
         libedit \
         libldap \
-        libcap && \
-    /venv/bin/python3 -m pip install --no-cache-dir gunicorn==20.1.0 && \
-    find / -type d -name '__pycache__' -exec rm -rf {} + && \
-    useradd -r -u 5050 -g root -s /sbin/nologin pgadmin && \
-    mkdir -p /var/lib/pgadmin && \
-    chown pgadmin:root /var/lib/pgadmin && \
-    chmod g=u /var/lib/pgadmin && \
-    touch /pgadmin4/config_distro.py && \
-    chown pgadmin:root /pgadmin4/config_distro.py && \
-    chmod g=u /pgadmin4/config_distro.py && \
-    chmod g=u /etc/passwd && \
-    setcap CAP_NET_BIND_SERVICE=+eip /usr/bin/python3.11 && \
-    echo "pgadmin ALL = NOPASSWD: /usr/sbin/postfix start" > /etc/sudoers.d/postfix && \
-    echo "pgadminr ALL = NOPASSWD: /usr/sbin/postfix start" >> /etc/sudoers.d/postfix
+        libcap
+RUN \
+    --mount=type=cache,id=pip-$TARGETPLATFORM,sharing=locked,target=/root/.cache \
+        /venv/bin/python3 -m pip install --no-cache-dir gunicorn==20.1.0 && \
+        find / -type d -name '__pycache__' -exec rm -rf {} + && \
+        useradd -r -u 5050 -g root -s /sbin/nologin pgadmin && \
+        mkdir -p /var/lib/pgadmin && \
+        chown pgadmin:root /var/lib/pgadmin && \
+        chmod g=u /var/lib/pgadmin && \
+        touch /pgadmin4/config_distro.py && \
+        chown pgadmin:root /pgadmin4/config_distro.py && \
+        chmod g=u /pgadmin4/config_distro.py && \
+        chmod g=u /etc/passwd && \
+        setcap CAP_NET_BIND_SERVICE=+eip /usr/bin/python3.11 && \
+        echo "pgadmin ALL = NOPASSWD: /usr/sbin/postfix start" > /etc/sudoers.d/postfix && \
+        echo "pgadminr ALL = NOPASSWD: /usr/sbin/postfix start" >> /etc/sudoers.d/postfix
 
 # --------------------------------------
 # Finish image (Different from official pgAdmin)

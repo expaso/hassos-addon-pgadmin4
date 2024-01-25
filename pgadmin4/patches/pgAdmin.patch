@@ -1,14 +1,15 @@
-diff --git a/web/pgAdmin4.py b/web/pgAdmin4.py
-index 35a04b37d..c3b2bb0b1 100644
---- a/web/pgAdmin4.py
-+++ b/web/pgAdmin4.py
-@@ -149,8 +149,7 @@ if 'PGADMIN_INT_KEY' in os.environ:
- else:
-     app.PGADMIN_INT_KEY = ''
- 
--if not app.PGADMIN_RUNTIME:
--    app.wsgi_app = ReverseProxied(app.wsgi_app)
-+app.wsgi_app = ReverseProxied(app.wsgi_app)
- 
- app.run_before_app_start()
-
+diff --git a/web/pgadmin/static/js/helpers/Notifier.jsx b/web/pgadmin/static/js/helpers/Notifier.jsx
+index 8338dfbdd..ad1591b8f 100644
+--- a/web/pgadmin/static/js/helpers/Notifier.jsx
++++ b/web/pgadmin/static/js/helpers/Notifier.jsx
+@@ -190,7 +190,9 @@ export function NotifierProvider({ pgAdmin, pgWindow, getInstance, children, onR
+   useEffect(()=>{
+     // if open in an iframe then use top pgAdmin
+     if(window.self != window.top) {
+-      pgAdmin.Browser.notifier = new Notifier(modal, pgWindow.pgAdmin.Browser.notifier.snackbar);
++      if (pgWindow) {
++        pgAdmin.Browser.notifier = new Notifier(modal, pgWindow.pgAdmin.Browser.notifier.snackbar);
++      }
+       onReady?.();
+       getInstance?.(pgAdmin.Browser.notifier);
+     }

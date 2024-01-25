@@ -5,11 +5,11 @@ slug: pgadmin4
 description: A PostgreSQL Management and Query tool
 url: https://github.com/Expaso/hassos-addon-pgadmin4
 arch:
-- aarch64
-- amd64
-- armhf
-- armv7
-- i386
+  - aarch64
+#  - amd64
+#  - armhf
+#  - armv7
+#  - i386
 startup: application
 ingress: true
 ingress_port: 0
@@ -47,4 +47,4 @@ schema:
   init_commands:
   - str
   leave_front_door_open: bool?
-image: husselhans/hassos-addon-pgadmin4-{arch}
+image: husselhans/hassos-addon-pgadmin4

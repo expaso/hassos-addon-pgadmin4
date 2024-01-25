@@ -3,7 +3,7 @@
 To build the lastest version using local docker, switch to the folder where the `dockerfile` resides, and run:
 
 ```
-docker build --plarform linux/aarch64 --tag husselhans/hassos-addon-pgadmin4-aarch64:dev .
+./build.sh
 ```
 The dockerfile already contains the default build architecture and the default base image:
 
