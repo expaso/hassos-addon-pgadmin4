@@ -12,8 +12,7 @@ ARG BUILD_FROM=ghcr.io/hassio-addons/base/aarch64:15.0.5
 
 FROM --platform=$BUILDPLATFORM alpine:latest as app-builder
 
-RUN \
-    --mount=type=cache,id=apk,sharing=locked,target=/var/cache/apk \
+RUN --mount=type=cache,id=apk,sharing=locked,target=/var/cache/apk \
     apk add \
         autoconf \
         automake \
@@ -86,8 +85,7 @@ FROM alpine:latest as env-builder
 # Install dependencies
 COPY official-pgadmin4/requirements.txt /
 
-RUN \
-    --mount=type=cache,id=apk-$TARGETPLATFORM,sharing=locked,target=/var/cache/apk \
+RUN --mount=type=cache,id=apk-$TARGETPLATFORM,sharing=locked,target=/var/cache/apk \
         apk add \
             make \
             python3 \
@@ -105,8 +103,7 @@ RUN \
             libjpeg-turbo-dev \
             libpng-dev \
             python3-dev
-RUN \
-    --mount=type=cache,id=pip-$TARGETPLATFORM,sharing=locked,target=/root/.cache \
+RUN --mount=type=cache,id=pip-$TARGETPLATFORM,sharing=locked,target=/root/.cache \
         python3 -m venv --system-site-packages --without-pip /venv && \
         #/venv/bin/python3 -m pip install setuptools && \
         /venv/bin/python3 -m pip install -r requirements.txt && \
@@ -119,8 +116,7 @@ RUN \
 FROM env-builder as docs-builder
 
 # Install Sphinx
-RUN \
-    --mount=type=cache,id=pip-$TARGETPLATFORM,sharing=locked,target=/root/.cache \
+RUN --mount=type=cache,id=pip-$TARGETPLATFORM,sharing=locked,target=/root/.cache \
         /venv/bin/python3 -m pip install sphinx && \
         /venv/bin/python3 -m pip install sphinxcontrib-youtube
 
@@ -179,7 +175,7 @@ COPY --from=pg16-builder /usr/local/bin/psql /usr/local/pgsql/pgsql-16/
 #########################################################################
 # Assemble everything into the final container.
 #########################################################################
-FROM $BUILD_FROM
+FROM $BUILD_FROM 
 
 # Copy in the Python packages
 COPY --from=env-builder /venv /venv
@@ -211,8 +207,7 @@ COPY official-pgadmin4/LICENSE /pgadmin4/LICENSE
 COPY official-pgadmin4/DEPENDENCIES /pgadmin4/DEPENDENCIES
 
 # Install runtime dependencies and configure everything in one RUN step
-RUN \
-    --mount=type=cache,id=apk-$TARGETPLATFORM,target=/var/cache/apk \
+RUN --mount=type=cache,id=apk-$TARGETPLATFORM,target=/var/cache/apk \
     apk add \
         python3 \
         py3-pip \
@@ -225,8 +220,7 @@ RUN \
         libedit \
         libldap \
         libcap
-RUN \
-    --mount=type=cache,id=pip-$TARGETPLATFORM,sharing=locked,target=/root/.cache \
+RUN --mount=type=cache,id=pip-$TARGETPLATFORM,sharing=locked,target=/root/.cache \
         /venv/bin/python3 -m pip install --no-cache-dir gunicorn==20.1.0 && \
         find / -type d -name '__pycache__' -exec rm -rf {} + && \
         useradd -r -u 5050 -g root -s /sbin/nologin pgadmin && \
@@ -260,6 +254,11 @@ ENV \
     S6_SERVICES_GRACETIME=240000
 ENV \
     S6_CMD_WAIT_FOR_SERVICES_MAXTIME=120000
+
+ENV \
+    PGADMIN_CONFIG_ENHANCED_COOKIE_PROTECTION="False" \
+    PGADMIN_CONFIG_WTF_CSRF_CHECK_DEFAULT="False" \
+    PGADMIN_CONFIG_WTF_CSRF_ENABLED="False"
 
 # Copy data
 COPY  rootfs /

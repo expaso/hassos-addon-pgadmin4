@@ -1,15 +1,22 @@
 diff --git a/web/pgadmin/static/js/helpers/Notifier.jsx b/web/pgadmin/static/js/helpers/Notifier.jsx
-index 8338dfbdd..ad1591b8f 100644
+index 8338dfbdd..68d82e99a 100644
 --- a/web/pgadmin/static/js/helpers/Notifier.jsx
 +++ b/web/pgadmin/static/js/helpers/Notifier.jsx
-@@ -190,7 +190,9 @@ export function NotifierProvider({ pgAdmin, pgWindow, getInstance, children, onR
+@@ -189,7 +189,7 @@ export function NotifierProvider({ pgAdmin, pgWindow, getInstance, children, onR
+ 
    useEffect(()=>{
      // if open in an iframe then use top pgAdmin
-     if(window.self != window.top) {
--      pgAdmin.Browser.notifier = new Notifier(modal, pgWindow.pgAdmin.Browser.notifier.snackbar);
-+      if (pgWindow) {
-+        pgAdmin.Browser.notifier = new Notifier(modal, pgWindow.pgAdmin.Browser.notifier.snackbar);
-+      }
+-    if(window.self != window.top) {
++    if(window.self != window.top && pgWindow?.pgAdmin?.Browser?.notifier?.snackbar) {
+       pgAdmin.Browser.notifier = new Notifier(modal, pgWindow.pgAdmin.Browser.notifier.snackbar);
        onReady?.();
        getInstance?.(pgAdmin.Browser.notifier);
-     }
+@@ -197,7 +197,7 @@ export function NotifierProvider({ pgAdmin, pgWindow, getInstance, children, onR
+   }, []);
+ 
+   // if open in a window, then create your own Snackbar
+-  if(window.self == window.top) {
++  if(window.self == window.top || pgWindow?.pgAdmin?.Browser?.notifier?.snackbar) {
+     return (
+       <SnackbarProvider
+         maxSnack={30}

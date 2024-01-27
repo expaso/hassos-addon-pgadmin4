@@ -9,16 +9,15 @@ if [ -n "$1" ]; then
     archs=$1
 fi
 
-
 # Print the result
 echo "Building version '$version' for platforms '$archs'"
 
 # Build and Push
-#    --cache-to type=registry,ref=husselhans/hassos-addon-pgadmin4:cache,mode=max \
-docker \
-    buildx build \
+#    
+docker buildx build \
     --push \
-    --platform linux/aarch64 \
+    --platform $archs \
     --cache-from type=registry,ref=husselhans/hassos-addon-pgadmin4:cache \
+    --cache-to type=registry,ref=husselhans/hassos-addon-pgadmin4:cache,mode=max \
     --tag husselhans/hassos-addon-pgadmin4:$version \
     .

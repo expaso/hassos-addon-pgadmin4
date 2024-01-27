@@ -31,9 +31,11 @@ jobs:
             -v ~/.docker:/root/.docker \
             -v /var/run/docker.sock:/var/run/docker.sock \
             -v "$(pwd)":/data homeassistant/amd64-builder \
+            --addon \
             --target pgadmin4 --all \
             --docker-user ${{ secrets.DOCKER_USERNAME }} \
             --docker-password ${{ secrets.DOCKER_PASSWORD }}
+            --cache-tag cache
 
   update_release_draft:
     name: Release Drafter

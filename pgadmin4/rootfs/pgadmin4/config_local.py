@@ -120,3 +120,7 @@ MASTER_PASSWORD_REQUIRED = False
 
 # Disables the 'there is a new version' message.
 UPGRADE_CHECK_ENABLED = False
+
+AUTHENTICATION_SOURCES = ['internal']
+
+LDAP_ANONYMOUS_BIND = True

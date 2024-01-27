@@ -16,16 +16,22 @@ This can also be done by passing the build-arguments by the commandline:
 ```
 docker build --tag husselhans/hassos-addon-pgadmin4-armv7:dev . --build-arg BUILD_FROM=ghcr.io/hassio-addons/base/armv7:15.0.5
 ```
-
 Hereafter, you can push the image to dockerhub using cmd of docker desktop for testing purposes.
-
 
 ## Build using Home Asssitant Builder
 
 To build the latest version using the HomeAssistant Addon Builder container, for `aarch64 architecture` for example, run:
 
 ```
-docker run --rm --privileged -v ~/.docker:/root/.docker -v ~/hassos-addon-pgadmin4/pgadmin4:/data homeassistant/amd64-builder --target pgadmin4 --aarch64 -t /data
+docker run --rm --privileged \
+    -v ~/.docker:/root/.docker \
+    -v /var/run/docker.sock:/var/run/docker.sock \
+    -v ~/hassos-addon-pgadmin4/pgadmin4:/data homeassistant/amd64-builder \
+    --addon \
+    --target pgadmin4 \
+    --aarch64 \
+    --cache-tag cache \
+    -t /data
 ```
 
 This will use the base images from the `build.json` file, and the architecture specified. Use `--all` instead of `--aarch64`  to build all architectures within the `config.json`for example.

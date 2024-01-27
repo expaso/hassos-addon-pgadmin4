@@ -32,8 +32,10 @@ jobs:
             -v /var/run/docker.sock:/var/run/docker.sock \
             -v "$(pwd)":/data homeassistant/amd64-builder \
             --target pgadmin4 --all \
+            --addon
             --docker-user ${{ secrets.DOCKER_USERNAME }} \
             --docker-password ${{ secrets.DOCKER_PASSWORD }}
+            --cache-tag cache
 
   # publish:
   #   needs: build
