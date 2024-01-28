@@ -16,8 +16,8 @@ echo "Building version '$version' for platforms '$archs'"
 #    
 docker buildx build \
     --push \
-    --platform $archs \
+    --platform aarch64 \
     --cache-from type=registry,ref=husselhans/hassos-addon-pgadmin4:cache \
-    --cache-to type=registry,ref=husselhans/hassos-addon-pgadmin4:cache,mode=max \
+    --cache-to type=registry,ref=husselhans/hassos-addon-pgadmin4:cache \
     --tag husselhans/hassos-addon-pgadmin4:$version \
     .
