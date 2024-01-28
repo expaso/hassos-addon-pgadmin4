@@ -47,4 +47,4 @@ schema:
   init_commands:
   - str
   leave_front_door_open: bool?
-image: husselhans/hassos-addon-pgadmin4-${arch}
+image: husselhans/hassos-addon-pgadmin4-{arch}
