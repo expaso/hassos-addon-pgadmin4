@@ -208,7 +208,7 @@ COPY official-pgadmin4/DEPENDENCIES /pgadmin4/DEPENDENCIES
 
 # Install runtime dependencies and configure everything in one RUN step
 RUN --mount=type=cache,id=apk-$TARGETPLATFORM,target=/var/cache/apk \
-    apk add \
+    apk --force-broken-world add \
         python3 \
         py3-pip \
         postfix \
