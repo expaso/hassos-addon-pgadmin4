@@ -39,7 +39,7 @@ for arch in $(yq -r '.arch[]' config.yaml); do
         --push \
         --platform linux/$arch \
         --cache-from type=registry,ref=husselhans/hassos-addon-pgadmin4:cache \
-        --cache-to type=registry,ref=husselhans/hassos-addon-pgadmin4:cache,mode=max \
+        --cache-to type=registry,ref=husselhans/hassos-addon-pgadmin4-$arch:cache,mode=max \
         --tag husselhans/hassos-addon-pgadmin4-$arch:$version \
         --build-arg BUILD_FROM=ghcr.io/hassio-addons/base/$arch:15.0.5 \
         --progress plain \
