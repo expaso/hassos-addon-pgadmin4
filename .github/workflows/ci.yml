@@ -34,7 +34,7 @@ jobs:
             --addon \
             --target pgadmin4 --all \
             --docker-user ${{ secrets.DOCKER_USERNAME }} \
-            --docker-password ${{ secrets.DOCKER_PASSWORD }}
+            --docker-password ${{ secrets.DOCKER_PASSWORD }} \
             --cache-tag cache
 
   update_release_draft:
