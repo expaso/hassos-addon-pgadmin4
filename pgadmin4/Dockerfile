@@ -81,11 +81,12 @@ RUN \
 #########################################################################
 
 FROM alpine:latest as env-builder
-
+ARG TARGETARCH
+ARG TARGETVARIANT
 # Install dependencies
 COPY official-pgadmin4/requirements.txt /
 
-RUN --mount=type=cache,id=apk-$TARGETPLATFORM,sharing=locked,target=/var/cache/apk \
+RUN --mount=type=cache,id=apk-${TARGETARCH}-${TARGETVARIANT},sharing=locked,target=/var/cache/apk \
         apk add \
             make \
             python3 \
@@ -103,7 +104,8 @@ RUN --mount=type=cache,id=apk-$TARGETPLATFORM,sharing=locked,target=/var/cache/a
             libjpeg-turbo-dev \
             libpng-dev \
             python3-dev
-RUN --mount=type=cache,id=pip-$TARGETPLATFORM,sharing=locked,target=/root/.cache \
+
+RUN --mount=type=cache,id=pip-${TARGETARCH}-${TARGETVARIANT},sharing=locked,target=/root/.cache \
         python3 -m venv --system-site-packages --without-pip /venv && \
         #/venv/bin/python3 -m pip install setuptools && \
         /venv/bin/python3 -m pip install -r requirements.txt && \
@@ -114,9 +116,10 @@ RUN --mount=type=cache,id=pip-$TARGETPLATFORM,sharing=locked,target=/root/.cache
 #########################################################################
 
 FROM env-builder as docs-builder
-
+ARG TARGETARCH
+ARG TARGETVARIANT
 # Install Sphinx
-RUN --mount=type=cache,id=pip-$TARGETPLATFORM,sharing=locked,target=/root/.cache \
+RUN --mount=type=cache,id=pip-${TARGETARCH}-${TARGETVARIANT},sharing=locked,target=/root/.cache \
         /venv/bin/python3 -m pip install sphinx && \
         /venv/bin/python3 -m pip install sphinxcontrib-youtube
 
@@ -176,6 +179,8 @@ COPY --from=pg16-builder /usr/local/bin/psql /usr/local/pgsql/pgsql-16/
 # Assemble everything into the final container.
 #########################################################################
 FROM $BUILD_FROM 
+ARG TARGETARCH
+ARG TARGETVARIANT
 
 # Copy in the Python packages
 COPY --from=env-builder /venv /venv
@@ -189,8 +194,7 @@ COPY --from=pg16-builder /usr/lib/liblz4.so.1.9.4 /usr/lib/
 RUN ln -s libpq.so.5.16 /usr/lib/libpq.so.5 && \
     ln -s libpq.so.5.16 /usr/lib/libpq.so && \
     ln -s libzstd.so.1.5.5 /usr/lib/libzstd.so.1 && \
-    ln -s liblz4.so.1.9.4 /usr/lib/liblz4.so.1
-
+    ln -s liblz4.so.1.9.4 /usr/lib/liblz4.so.1 && echo jeej
 
 WORKDIR /pgadmin4
 ENV PYTHONPATH=/pgadmin4
@@ -198,6 +202,10 @@ ENV PYTHONPATH=/pgadmin4
 # Copy in the code and docs
 COPY --from=app-builder /pgadmin4/web /pgadmin4
 COPY --from=docs-builder /pgadmin4/docs/en_US/_build/html/ /pgadmin4/docs
+
+# Dumb fix for a docker build: https://github.com/moby/moby/issues/37965
+RUN true
+
 COPY official-pgadmin4/pkg/docker/run_pgadmin.py /pgadmin4
 COPY official-pgadmin4/pkg/docker/gunicorn_config.py /pgadmin4
 #COPY official-pgadmin4/pkg/docker/entrypoint.sh /entrypoint.sh
@@ -207,8 +215,9 @@ COPY official-pgadmin4/LICENSE /pgadmin4/LICENSE
 COPY official-pgadmin4/DEPENDENCIES /pgadmin4/DEPENDENCIES
 
 # Install runtime dependencies and configure everything in one RUN step
-RUN --mount=type=cache,id=apk-$TARGETPLATFORM,target=/var/cache/apk \
-    apk --force-broken-world add \
+RUN --mount=type=cache,id=final-apk-${TARGETARCH}-${TARGETVARIANT},sharing=locked,target=/var/cache/apk \
+    apk add \
+        apk-tools \
         python3 \
         py3-pip \
         postfix \
@@ -220,9 +229,11 @@ RUN --mount=type=cache,id=apk-$TARGETPLATFORM,target=/var/cache/apk \
         libedit \
         libldap \
         libcap
-RUN --mount=type=cache,id=pip-$TARGETPLATFORM,sharing=locked,target=/root/.cache \
-        /venv/bin/python3 -m pip install --no-cache-dir gunicorn==20.1.0 && \
-        find / -type d -name '__pycache__' -exec rm -rf {} + && \
+
+RUN --mount=type=cache,id=pip-${TARGETARCH}-${TARGETVARIANT},sharing=locked,target=/root/.cache \
+        /venv/bin/python3 -m pip install gunicorn==20.1.0
+
+RUN     find / -type d -name '__pycache__' -exec rm -rf {} + && \
         useradd -r -u 5050 -g root -s /sbin/nologin pgadmin && \
         mkdir -p /var/lib/pgadmin && \
         chown pgadmin:root /var/lib/pgadmin && \
@@ -240,7 +251,8 @@ RUN --mount=type=cache,id=pip-$TARGETPLATFORM,sharing=locked,target=/root/.cache
 # --------------------------------------
 
 # Install NGINX for Ingress support
-RUN apk add --no-cache \
+RUN --mount=type=cache,id=final-apk-${TARGETARCH}-${TARGETVARIANT},sharing=locked,target=/var/cache/apk \
+    apk add \
         git \
         lua-resty-http \
         nginx-mod-http-lua \
@@ -266,6 +278,7 @@ RUN chmod +x /etc/cont-init.d/* \
     && chmod +x /etc/services.d/nginx/* \
     && chmod +x /etc/services.d/pgadmin4/*
 
+#Disabled the special user, because we need to have a lot more in place to move away from ROOT
 #USER pgadmin
 
 WORKDIR /
