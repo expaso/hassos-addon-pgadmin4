@@ -32,11 +32,11 @@ jobs:
             -v /var/run/docker.sock:/var/run/docker.sock \
             -v "$(pwd)":/data homeassistant/amd64-builder \
             --addon \
+            --cache-tag cache \
             --target pgadmin4 --all \
             --docker-user ${{ secrets.DOCKER_USERNAME }} \
-            --docker-password ${{ secrets.DOCKER_PASSWORD }} \
-            --cache-tag cache
-
+            --docker-password ${{ secrets.DOCKER_PASSWORD }}
+            
   update_release_draft:
     name: Release Drafter
     runs-on: ubuntu-latest
