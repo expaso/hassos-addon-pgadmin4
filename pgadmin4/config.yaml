@@ -9,6 +9,7 @@ arch:
   - amd64
   - armhf
   - i386
+  - armv7
 startup: application
 ingress: true
 ingress_port: 0
