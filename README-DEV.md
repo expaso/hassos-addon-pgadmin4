@@ -8,13 +8,13 @@ To build the lastest version using local docker, switch to the folder where the 
 The dockerfile already contains the default build architecture and the default base image:
 
 ```
-ARG BUILD_FROM=ghcr.io/hassio-addons/base/aarch64:15.0.5
+ARG BUILD_FROM=ghcr.io/hassio-addons/base/aarch64:16.2.1
 ARG BUILD_ARCH=aarch64
 ```
 
 This can also be done by passing the build-arguments by the commandline:
 ```
-docker build --tag husselhans/hassos-addon-pgadmin4-armv7:dev . --build-arg BUILD_FROM=ghcr.io/hassio-addons/base/armv7:15.0.5
+docker build --tag husselhans/hassos-addon-pgadmin4-armv7:dev . --build-arg BUILD_FROM=ghcr.io/hassio-addons/base/armv7:16.2.1
 ```
 Hereafter, you can push the image to dockerhub using cmd of docker desktop for testing purposes.
 

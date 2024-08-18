@@ -1,4 +1,4 @@
-ARG BUILD_FROM=ghcr.io/hassio-addons/base/aarch64:15.0.5
+ARG BUILD_FROM=ghcr.io/hassio-addons/base/aarch64:16.2.1
 
 #Source: https://github.com/postgres/pgadmin4/blob/master/Dockerfile
 ########################################################################
@@ -30,6 +30,14 @@ RUN --mount=type=cache,id=apk,sharing=locked,target=/var/cache/apk \
         yarn \
         zlib-dev
 
+# FIX: Clone into temp folder, and move the .git directory to root. Apparently the build-process needs this.
+RUN \
+    mkdir /tmp/pgadmin4 && \
+    git clone --no-checkout https://github.com/pgadmin-org/pgadmin4.git /tmp/pgadmin4 && \
+    mv /tmp/pgadmin4/.git / && \
+    rm -rf /tmp/pgadmin4
+
+
 # Create the /pgadmin4 directory and copy the source into it. Explicitly
 # remove the node_modules directory as we'll recreate a clean version, as well
 # as various other files we don't want
@@ -42,17 +50,12 @@ RUN rm -rf /pgadmin4/web/*.log \
            `find /pgadmin4/web -type f -name .DS_Store`
 
 #### PATCH SOURCES ####
-# Patch pgadmin-files to allow reverse proxying in desktop mode.
-# This is needed to support ingress (which is on a deeper path below root)
-# We want to run pfAdmin in desktop-mode (no users), because we would like to handle users and authentication ourselves.
-# Problem is, in desktop mode, reverse-propxying is not respected.
-# And so we patch the files to enale this behaviour again.
-#sed -i '105s/config.SERVER_MODE/True/' /pgadmin4/pgadmin/__init__.py    #Line 105: Assume server-mode here to enable reverse-proxy
-#sed -i '95s/config.SERVER_MODE/True/' /pgadmin4/pgAdmin4.py             #Line 94: Assume server-mode here to enable reverse-proxy
+# Patch pgadmin-files to fix small issues.
+# Note: Temporary disabled due to no bugs to patch in this release.
 #######################
-COPY patches/pgAdmin.patch /pgadmin4
-WORKDIR /pgadmin4
-RUN git apply -v pgAdmin.patch
+#COPY patches/pgAdmin.patch /pgadmin4
+#WORKDIR /pgadmin4
+#RUN git apply -v pgAdmin.patch
 #######################
 
 WORKDIR /pgadmin4/web
@@ -62,19 +65,22 @@ RUN \
     --mount=type=cache,id=yarn,sharing=locked,target=/root/.yarn \
     export YARN_CACHE_FOLDER=/root/.yarn && \
     export CPPFLAGS="-DPNG_ARM_NEON_OPT=0" && \
-        yarn set version berry && \
-        yarn set version 3 && \
-        yarn install && \
-        yarn run bundle && \
-        rm -rf node_modules \
-            yarn.lock \
-            package.json \
-            .[^.]* \
-            babel.cfg \
-            webpack.* \
-            jest.config.js \
-            babel.* \
-            ./pgadmin/static/js/generated/.cache
+    npm install -g corepack && \
+    corepack enable && \
+    yarn set version berry && \
+    yarn set version 3 && \
+    yarn install && \
+    yarn run bundle && \
+    rm -rf node_modules \
+           yarn.lock \
+           package.json \
+           .[^.]* \
+           babel.cfg \
+           webpack.* \
+           jest.config.js \
+           babel.* \
+           ./pgadmin/static/js/generated/.cache \
+           /pgadmin4/.git
 
 #########################################################################
 # Next, create the base environment for Python
@@ -107,7 +113,6 @@ RUN --mount=type=cache,id=apk-${TARGETARCH}-${TARGETVARIANT},sharing=locked,targ
 
 RUN --mount=type=cache,id=pip-${TARGETARCH}-${TARGETVARIANT},sharing=locked,target=/root/.cache \
         python3 -m venv --system-site-packages --without-pip /venv && \
-        #/venv/bin/python3 -m pip install setuptools && \
         /venv/bin/python3 -m pip install -r requirements.txt && \
         apk del build-deps
 
@@ -118,6 +123,7 @@ RUN --mount=type=cache,id=pip-${TARGETARCH}-${TARGETVARIANT},sharing=locked,targ
 FROM env-builder as docs-builder
 ARG TARGETARCH
 ARG TARGETVARIANT
+
 # Install Sphinx
 RUN --mount=type=cache,id=pip-${TARGETARCH}-${TARGETVARIANT},sharing=locked,target=/root/.cache \
         /venv/bin/python3 -m pip install sphinx && \
@@ -188,13 +194,13 @@ COPY --from=env-builder /venv /venv
 # Copy in the tools
 COPY --from=tool-builder /usr/local/pgsql /usr/local/
 COPY --from=pg16-builder /usr/local/lib/libpq.so.5.16 /usr/lib/
-COPY --from=pg16-builder /usr/lib/libzstd.so.1.5.5 /usr/lib/
+COPY --from=pg16-builder /usr/lib/libzstd.so.1.5.6 /usr/lib/
 COPY --from=pg16-builder /usr/lib/liblz4.so.1.9.4 /usr/lib/
 
 RUN ln -s libpq.so.5.16 /usr/lib/libpq.so.5 && \
     ln -s libpq.so.5.16 /usr/lib/libpq.so && \
-    ln -s libzstd.so.1.5.5 /usr/lib/libzstd.so.1 && \
-    ln -s liblz4.so.1.9.4 /usr/lib/liblz4.so.1 && echo jeej
+    ln -s libzstd.so.1.5.6 /usr/lib/libzstd.so.1 && \
+    ln -s liblz4.so.1.9.4 /usr/lib/liblz4.so.1
 
 WORKDIR /pgadmin4
 ENV PYTHONPATH=/pgadmin4
