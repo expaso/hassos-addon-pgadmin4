@@ -223,8 +223,8 @@ COPY official-pgadmin4/pkg/docker/gunicorn_config.py /pgadmin4
 #COPY official-pgadmin4/pkg/docker/entrypoint.sh /entrypoint.sh
 
 # License files
-COPY ./official-pgadmin4/LICENSE /pgadmin4/LICENSE
-COPY ./official-pgadmin4/DEPENDENCIES /pgadmin4/DEPENDENCIES
+COPY official-pgadmin4/LICENSE /pgadmin4/LICENSE
+#COPY official-pgadmin4/DEPENDENCIES /pgadmin4/DEPENDENCIES
 
 # Install runtime dependencies and configure everything in one RUN step
 # hadolint ignore=DL3018
