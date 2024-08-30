@@ -218,13 +218,13 @@ COPY --from=docs-builder /pgadmin4/docs/en_US/_build/html/ /pgadmin4/docs
 # Dumb fix for a docker build: https://github.com/moby/moby/issues/37965
 RUN true
 
-COPY official-pgadmin4/pkg/docker/run_pgadmin.py /pgadmin4
-COPY official-pgadmin4/pkg/docker/gunicorn_config.py /pgadmin4
+COPY --link official-pgadmin4/pkg/docker/run_pgadmin.py /pgadmin4
+COPY --link official-pgadmin4/pkg/docker/gunicorn_config.py /pgadmin4
 #COPY official-pgadmin4/pkg/docker/entrypoint.sh /entrypoint.sh
 
 # License files
-COPY official-pgadmin4/LICENSE /pgadmin4/LICENSE
-#COPY official-pgadmin4/DEPENDENCIES /pgadmin4/DEPENDENCIES
+COPY --link official-pgadmin4/LICENSE /pgadmin4/LICENSE
+COPY --link official-pgadmin4/DEPENDENCIES /pgadmin4/DEPENDENCIES
 
 # Install runtime dependencies and configure everything in one RUN step
 # hadolint ignore=DL3018
