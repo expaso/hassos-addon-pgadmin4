@@ -19,7 +19,7 @@ Press install to download the add-on and unpack it on your machine. This can tak
 Start the add-on, check the logs of the add-on to see if everything went well.
 
 On first start-up, a new configuration is created. This can take some time.
-Please be patient. 
+Please be patient.
 
 ## Configuation
 
@@ -51,7 +51,7 @@ The filename of your Private Key File in the `ssl` folder.
 ### Option: `system_packages`
 
 Optional extra Alpine packages that will be installed during add-on startup.
-__Beware__: Adding a lot of packages could lead to long startup time.
+**Beware**: Adding a lot of packages could lead to long startup time.
 
 ### Option: `init_commands`
 
@@ -59,11 +59,9 @@ Any extra commands that will be run during add-on startup.
 
 ### Option: `leave_front_door_open`
 
-Serves the website without protection of  home-assistant user authentication.
+Serves the website without protection of home-assistant user authentication.
 
-__CAUTION!!__
+**CAUTION!!**
 
 Setting this option is a potential security risk and should be avoided whenever possible.
 If you don't know what you are doing, just leave it off.
-
-
