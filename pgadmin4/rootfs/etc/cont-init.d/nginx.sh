@@ -1,6 +1,6 @@
 #!/usr/bin/with-contenv bashio
 # ==============================================================================
-# Home Assistant Community Add-on: pgAdmin4
+# Home Assistant Add-on: pgAdmin4
 # Configures NGINX for use with pgAdmin4
 # ==============================================================================
 declare admin_port

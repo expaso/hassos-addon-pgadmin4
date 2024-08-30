@@ -5,11 +5,12 @@ ARG BUILD_FROM=ghcr.io/hassio-addons/base/aarch64:16.2.1
 #
 # pgAdmin 4 - PostgreSQL Tools
 #
-# Copyright (C) 2013 - 2022, The pgAdmin Development Team
+# Copyright (C) 2013 - 2024, The pgAdmin Development Team
 # This software is released under the PostgreSQL Licence
 #
 #########################################################################
 
+# hadolint ignore=DL3007
 FROM --platform=$BUILDPLATFORM alpine:latest as app-builder
 
 RUN --mount=type=cache,id=apk,sharing=locked,target=/var/cache/apk \
@@ -288,3 +289,27 @@ RUN chmod +x /etc/cont-init.d/* \
 #USER pgadmin
 
 WORKDIR /
+
+
+# Labels
+LABEL \
+    io.hass.name="pgAdmin4 HA Addon (${BUILD_ARCH})" \
+    io.hass.description="Home Assistant Add-on: pgAdmin4" \
+    io.hass.arch="${BUILD_ARCH}" \
+    io.hass.type="base" \
+    io.hass.version=${BUILD_VERSION} \
+    io.hass.base.version=${BUILD_VERSION} \
+    io.hass.base.name="alpine" \
+    io.hass.base.image="hassioaddons/base" \
+    maintainer="Hans van Essen <hans@expaso.nl>" \
+    org.opencontainers.image.title="pgAdmin4 HA Addon (${BUILD_ARCH})" \
+    org.opencontainers.image.description="Home Assistant Add-on: pgAdmin4" \
+    org.opencontainers.image.vendor="Expaso BV" \
+    org.opencontainers.image.authors="Hans van Essen <hans@expaso.nl>" \
+    org.opencontainers.image.licenses="Apache 2.0" \
+    org.opencontainers.image.url="https://ghcr.io/expaso/pgadmin4/${BUILD_ARCH}:" \
+    org.opencontainers.image.source="https://github.com/expaso/hassos-addon-pgadmin4" \
+    org.opencontainers.image.documentation="https://github.com/expaso/hassos-addon-pgadmin4/blob/master/README.md" \
+    org.opencontainers.image.created=${BUILD_DATE} \
+    org.opencontainers.image.revision=${BUILD_REF} \
+    org.opencontainers.image.version=${BUILD_VERSION}
