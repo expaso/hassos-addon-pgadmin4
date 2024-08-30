@@ -1,6 +1,6 @@
 ---
 name: pgAdmin4
-version: dev
+version: egde
 stage: stable
 slug: pgadmin4
 description: A PostgreSQL Management and Query tool
@@ -49,4 +49,4 @@ schema:
   init_commands:
   - str
   leave_front_door_open: bool?
-image: ghcr.io/expaso/timescaledb/{arch}
+image: ghcr.io/expaso/pgadmin4/{arch}
