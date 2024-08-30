@@ -14,4 +14,3 @@ on:
 jobs:
   workflows:
     uses: expaso/hassio-addons-workflows/.github/workflows/addon-ci.yaml@main
-
