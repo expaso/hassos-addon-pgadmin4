@@ -1,6 +1,6 @@
 ---
 name: pgAdmin4
-version: egde
+version: edge
 stage: stable
 slug: pgadmin4
 description: A PostgreSQL Management and Query tool
@@ -31,8 +31,8 @@ ports_description:
   443/tcp: Web interface SSL (Not required for Ingress i.e. Sidebar)
 auth_api: true
 map:
-- ssl
-- share:rw
+  - ssl
+  - share:rw
 options:
   ssl: true
   certfile: fullchain.pem
@@ -45,8 +45,8 @@ schema:
   certfile: str
   keyfile: str
   system_packages:
-  - str
+    - str
   init_commands:
-  - str
+    - str
   leave_front_door_open: bool?
 image: ghcr.io/expaso/pgadmin4/{arch}
