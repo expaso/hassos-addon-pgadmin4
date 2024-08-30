@@ -10,7 +10,7 @@ ARG BUILD_FROM=ghcr.io/hassio-addons/base/aarch64:16.2.1
 #
 #########################################################################
 
-# hadolint ignore=DL3007
+# hadolint ignore=DL3029
 FROM --platform=$BUILDPLATFORM alpine:latest as app-builder
 
 # hadolint ignore=DL3018
@@ -63,6 +63,7 @@ RUN rm -rf /pgadmin4/web/*.log \
 WORKDIR /pgadmin4/web
 
 # Build the JS vendor code in the app-builder, and then remove the vendor source.
+# hadolint ignore=DL3016
 RUN \
     --mount=type=cache,id=yarn,sharing=locked,target=/root/.yarn \
     export YARN_CACHE_FOLDER=/root/.yarn && \
@@ -76,7 +77,7 @@ RUN \
     rm -rf node_modules \
            yarn.lock \
            package.json \
-           .[^.]* \
+           .[!.]* \
            babel.cfg \
            webpack.* \
            jest.config.js \
@@ -87,7 +88,7 @@ RUN \
 #########################################################################
 # Next, create the base environment for Python
 #########################################################################
-
+# hadolint ignore=DL3007
 FROM alpine:latest as env-builder
 ARG TARGETARCH
 ARG TARGETVARIANT
@@ -156,6 +157,7 @@ FROM postgres:14-alpine AS pg14-builder
 FROM postgres:15-alpine AS pg15-builder
 FROM postgres:16-alpine AS pg16-builder
 
+# hadolint ignore=DL3007
 FROM alpine:latest as tool-builder
 
 # Copy the PG binaries
@@ -187,7 +189,7 @@ COPY --from=pg16-builder /usr/local/bin/psql /usr/local/pgsql/pgsql-16/
 #########################################################################
 # Assemble everything into the final container.
 #########################################################################
-FROM $BUILD_FROM 
+FROM $BUILD_FROM as final
 ARG TARGETARCH
 ARG TARGETVARIANT
 
