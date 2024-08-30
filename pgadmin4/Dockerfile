@@ -13,6 +13,7 @@ ARG BUILD_FROM=ghcr.io/hassio-addons/base/aarch64:16.2.1
 # hadolint ignore=DL3007
 FROM --platform=$BUILDPLATFORM alpine:latest as app-builder
 
+# hadolint ignore=DL3018
 RUN --mount=type=cache,id=apk,sharing=locked,target=/var/cache/apk \
     apk add \
         autoconf \
@@ -93,6 +94,7 @@ ARG TARGETVARIANT
 # Install dependencies
 COPY official-pgadmin4/requirements.txt /
 
+# hadolint ignore=DL3018
 RUN --mount=type=cache,id=apk-${TARGETARCH}-${TARGETVARIANT},sharing=locked,target=/var/cache/apk \
         apk add \
             make \
@@ -222,6 +224,7 @@ COPY official-pgadmin4/LICENSE /pgadmin4/LICENSE
 COPY official-pgadmin4/DEPENDENCIES /pgadmin4/DEPENDENCIES
 
 # Install runtime dependencies and configure everything in one RUN step
+# hadolint ignore=DL3018
 RUN --mount=type=cache,id=final-apk-${TARGETARCH}-${TARGETVARIANT},sharing=locked,target=/var/cache/apk \
     apk add \
         apk-tools \
@@ -258,6 +261,7 @@ RUN     find / -type d -name '__pycache__' -exec rm -rf {} + && \
 # --------------------------------------
 
 # Install NGINX for Ingress support
+# hadolint ignore=DL3018
 RUN --mount=type=cache,id=final-apk-${TARGETARCH}-${TARGETVARIANT},sharing=locked,target=/var/cache/apk \
     apk add \
         git \
