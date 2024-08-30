@@ -135,7 +135,9 @@ RUN --mount=type=cache,id=pip-${TARGETARCH}-${TARGETVARIANT},sharing=locked,targ
 
 # Copy the docs from the local tree. Explicitly remove any existing builds that
 # may be present
+# hadolint ignore=DL3021
 COPY --link official-pgadmin4/docs /pgadmin4/docs
+# hadolint ignore=DL3021
 COPY --link official-pgadmin4/web /pgadmin4/web
 RUN rm -rf /pgadmin4/docs/en_US/_build
 
