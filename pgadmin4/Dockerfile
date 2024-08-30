@@ -11,7 +11,7 @@ ARG BUILD_FROM=ghcr.io/hassio-addons/base/aarch64:16.2.1
 #########################################################################
 
 # hadolint ignore=DL3029, DL3007
-FROM --platform=$BUILDPLATFORM alpine:latest as app-builder
+FROM --platform=$BUILDPLATFORM alpine:latest AS app-builder
 
 # hadolint ignore=DL3018
 RUN --mount=type=cache,id=apk,sharing=locked,target=/var/cache/apk \
@@ -89,11 +89,11 @@ RUN \
 # Next, create the base environment for Python
 #########################################################################
 # hadolint ignore=DL3007
-FROM alpine:latest as env-builder
+FROM alpine:latest AS env-builder
 ARG TARGETARCH
 ARG TARGETVARIANT
 # Install dependencies
-COPY --link  official-pgadmin4/requirements.txt /
+COPY --link official-pgadmin4/requirements.txt /
 
 # hadolint ignore=DL3018
 RUN --mount=type=cache,id=apk-${TARGETARCH}-${TARGETVARIANT},sharing=locked,target=/var/cache/apk \
@@ -124,7 +124,7 @@ RUN --mount=type=cache,id=pip-${TARGETARCH}-${TARGETVARIANT},sharing=locked,targ
 # Now, create a documentation build container for the Sphinx docs
 #########################################################################
 
-FROM env-builder as docs-builder
+FROM env-builder AS docs-builder
 ARG TARGETARCH
 ARG TARGETVARIANT
 
@@ -160,7 +160,7 @@ FROM postgres:15-alpine AS pg15-builder
 FROM postgres:16-alpine AS pg16-builder
 
 # hadolint ignore=DL3007
-FROM alpine:latest as tool-builder
+FROM alpine:latest AS tool-builder
 
 # Copy the PG binaries
 COPY --from=pg12-builder /usr/local/bin/pg_dump /usr/local/pgsql/pgsql-12/
@@ -192,7 +192,7 @@ COPY --from=pg16-builder /usr/local/bin/psql /usr/local/pgsql/pgsql-16/
 # Assemble everything into the final container.
 #########################################################################
 # hadolint ignore=DL3006
-FROM $BUILD_FROM as final
+FROM $BUILD_FROM AS final
 ARG TARGETARCH
 ARG TARGETVARIANT
 
@@ -221,9 +221,9 @@ COPY --from=docs-builder /pgadmin4/docs/en_US/_build/html/ /pgadmin4/docs
 RUN true
 
 # hadolint ignore=DL3021
-COPY --link pgadmin4/official-pgadmin4/pkg/docker/run_pgadmin.py /pgadmin4
+COPY --link pgadmin4/official-pgadmin4/pkg/docker/run_pgadmin.py /pgadmin4/
 # hadolint ignore=DL3021
-COPY --link pgadmin4/official-pgadmin4/pkg/docker/gunicorn_config.py /pgadmin4
+COPY --link pgadmin4/official-pgadmin4/pkg/docker/gunicorn_config.py /pgadmin4/
 #COPY official-pgadmin4/pkg/docker/entrypoint.sh /entrypoint.sh
 
 # License files
@@ -292,6 +292,11 @@ ENV \
     PGADMIN_CONFIG_WTF_CSRF_CHECK_DEFAULT="False" \
     PGADMIN_CONFIG_WTF_CSRF_ENABLED="False"
 
+ARG CACHE_BUST
+
+    # Timestamp the build
+RUN date +%Y%m%d%H%M%S > /build-timestamp
+
 # Copy data
 COPY  rootfs /
 RUN chmod +x /etc/cont-init.d/* \
@@ -302,7 +307,6 @@ RUN chmod +x /etc/cont-init.d/* \
 #USER pgadmin
 
 WORKDIR /
-
 
 # Labels
 LABEL \
