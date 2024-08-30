@@ -221,16 +221,16 @@ COPY --from=docs-builder /pgadmin4/docs/en_US/_build/html/ /pgadmin4/docs
 RUN true
 
 # hadolint ignore=DL3021
-COPY --link pgadmin4/official-pgadmin4/pkg/docker/run_pgadmin.py /pgadmin4/
+COPY --link official-pgadmin4/pkg/docker/run_pgadmin.py /pgadmin4/
 # hadolint ignore=DL3021
-COPY --link pgadmin4/official-pgadmin4/pkg/docker/gunicorn_config.py /pgadmin4/
+COPY --link official-pgadmin4/pkg/docker/gunicorn_config.py /pgadmin4/
 #COPY official-pgadmin4/pkg/docker/entrypoint.sh /entrypoint.sh
 
 # License files
 # hadolint ignore=DL3021
-COPY --link pgadmin4/official-pgadmin4/LICENSE /pgadmin4/
+COPY --link official-pgadmin4/LICENSE /pgadmin4/
 # hadolint ignore=DL3021
-COPY --link pgadmin4/official-pgadmin4/DEPENDENCIES /pgadmin4/
+COPY --link official-pgadmin4/DEPENDENCIES /pgadmin4/
 
 # Install runtime dependencies and configure everything in one RUN step
 # hadolint ignore=DL3018
