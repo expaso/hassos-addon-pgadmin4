@@ -93,7 +93,7 @@ FROM alpine:latest as env-builder
 ARG TARGETARCH
 ARG TARGETVARIANT
 # Install dependencies
-COPY official-pgadmin4/requirements.txt /
+COPY --link  official-pgadmin4/requirements.txt /
 
 # hadolint ignore=DL3018
 RUN --mount=type=cache,id=apk-${TARGETARCH}-${TARGETVARIANT},sharing=locked,target=/var/cache/apk \
@@ -135,8 +135,8 @@ RUN --mount=type=cache,id=pip-${TARGETARCH}-${TARGETVARIANT},sharing=locked,targ
 
 # Copy the docs from the local tree. Explicitly remove any existing builds that
 # may be present
-COPY official-pgadmin4/docs /pgadmin4/docs
-COPY official-pgadmin4/web /pgadmin4/web
+COPY --link official-pgadmin4/docs /pgadmin4/docs
+COPY --link official-pgadmin4/web /pgadmin4/web
 RUN rm -rf /pgadmin4/docs/en_US/_build
 
 # Build the docs
@@ -218,13 +218,13 @@ COPY --from=docs-builder /pgadmin4/docs/en_US/_build/html/ /pgadmin4/docs
 # Dumb fix for a docker build: https://github.com/moby/moby/issues/37965
 RUN true
 
-COPY --link official-pgadmin4/pkg/docker/run_pgadmin.py /pgadmin4
-COPY --link official-pgadmin4/pkg/docker/gunicorn_config.py /pgadmin4
+COPY --link pgadmin4/official-pgadmin4/pkg/docker/run_pgadmin.py /pgadmin4
+COPY --link pgadmin4/official-pgadmin4/pkg/docker/gunicorn_config.py /pgadmin4
 #COPY official-pgadmin4/pkg/docker/entrypoint.sh /entrypoint.sh
 
 # License files
-COPY --link official-pgadmin4/LICENSE /pgadmin4/LICENSE
-COPY --link official-pgadmin4/DEPENDENCIES /pgadmin4/DEPENDENCIES
+COPY --link pgadmin4/official-pgadmin4/LICENSE /pgadmin4/LICENSE
+COPY --link pgadmin4/official-pgadmin4/DEPENDENCIES /pgadmin4/DEPENDENCIES
 
 # Install runtime dependencies and configure everything in one RUN step
 # hadolint ignore=DL3018
