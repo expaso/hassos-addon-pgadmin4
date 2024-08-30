@@ -205,7 +205,7 @@ COPY --from=pg16-builder /usr/lib/liblz4.so.1.9.4 /usr/lib/
 
 RUN ln -s libpq.so.5.16 /usr/lib/libpq.so.5 && \
     ln -s libpq.so.5.16 /usr/lib/libpq.so && \
-    ln -s libzstd.so.1.5.6 /usr/lib/libzstd.so.1 && \
+#    ln -s libzstd.so.1.5.6 /usr/lib/libzstd.so.1 && \
     ln -s liblz4.so.1.9.4 /usr/lib/liblz4.so.1
 
 WORKDIR /pgadmin4
@@ -223,9 +223,8 @@ COPY official-pgadmin4/pkg/docker/gunicorn_config.py /pgadmin4
 #COPY official-pgadmin4/pkg/docker/entrypoint.sh /entrypoint.sh
 
 # License files
-COPY official-pgadmin4/LICENSE /pgadmin4/LICENSE
-RUN true
-COPY official-pgadmin4/DEPENDENCIES /pgadmin4/DEPENDENCIES
+COPY ./official-pgadmin4/LICENSE /pgadmin4/LICENSE
+COPY ./official-pgadmin4/DEPENDENCIES /pgadmin4/DEPENDENCIES
 
 # Install runtime dependencies and configure everything in one RUN step
 # hadolint ignore=DL3018
