@@ -10,7 +10,7 @@ ARG BUILD_FROM=ghcr.io/hassio-addons/base/aarch64:16.2.1
 #
 #########################################################################
 
-# hadolint ignore=DL3029
+# hadolint ignore=DL3029, DL3007
 FROM --platform=$BUILDPLATFORM alpine:latest as app-builder
 
 # hadolint ignore=DL3018
@@ -189,6 +189,7 @@ COPY --from=pg16-builder /usr/local/bin/psql /usr/local/pgsql/pgsql-16/
 #########################################################################
 # Assemble everything into the final container.
 #########################################################################
+# hadolint ignore=DL3006
 FROM $BUILD_FROM as final
 ARG TARGETARCH
 ARG TARGETVARIANT
