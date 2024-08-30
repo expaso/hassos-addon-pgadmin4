@@ -1,3 +1,4 @@
+---
 name: pgAdmin4
 version: dev
 stage: stable
@@ -48,4 +49,4 @@ schema:
   init_commands:
   - str
   leave_front_door_open: bool?
-image: husselhans/hassos-addon-pgadmin4-{arch}
+image: ghcr.io/expaso/timescaledb/{arch}
