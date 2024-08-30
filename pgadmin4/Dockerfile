@@ -228,9 +228,9 @@ COPY --link pgadmin4/official-pgadmin4/pkg/docker/gunicorn_config.py /pgadmin4
 
 # License files
 # hadolint ignore=DL3021
-COPY --link pgadmin4/official-pgadmin4/LICENSE /pgadmin4/LICENSE
+COPY --link pgadmin4/official-pgadmin4/LICENSE /pgadmin4/
 # hadolint ignore=DL3021
-COPY --link pgadmin4/official-pgadmin4/DEPENDENCIES /pgadmin4/DEPENDENCIES
+COPY --link pgadmin4/official-pgadmin4/DEPENDENCIES /pgadmin4/
 
 # Install runtime dependencies and configure everything in one RUN step
 # hadolint ignore=DL3018
