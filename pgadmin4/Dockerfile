@@ -261,7 +261,7 @@ RUN     find / -type d -name '__pycache__' -exec rm -rf {} + && \
         chown pgadmin:root /pgadmin4/config_distro.py && \
         chmod g=u /pgadmin4/config_distro.py && \
         chmod g=u /etc/passwd && \
-        setcap CAP_NET_BIND_SERVICE=+eip /usr/bin/python3.11 && \
+        setcap CAP_NET_BIND_SERVICE=+eip /usr/bin/python3.12 && \
         echo "pgadmin ALL = NOPASSWD: /usr/sbin/postfix start" > /etc/sudoers.d/postfix && \
         echo "pgadminr ALL = NOPASSWD: /usr/sbin/postfix start" >> /etc/sudoers.d/postfix
 
