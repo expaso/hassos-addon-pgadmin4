@@ -5,13 +5,15 @@ ARG BUILD_FROM=ghcr.io/hassio-addons/base/aarch64:16.2.1
 #
 # pgAdmin 4 - PostgreSQL Tools
 #
-# Copyright (C) 2013 - 2022, The pgAdmin Development Team
+# Copyright (C) 2013 - 2024, The pgAdmin Development Team
 # This software is released under the PostgreSQL Licence
 #
 #########################################################################
 
-FROM --platform=$BUILDPLATFORM alpine:latest as app-builder
+# hadolint ignore=DL3029, DL3007
+FROM --platform=$BUILDPLATFORM alpine:latest AS app-builder
 
+# hadolint ignore=DL3018
 RUN --mount=type=cache,id=apk,sharing=locked,target=/var/cache/apk \
     apk add \
         autoconf \
@@ -61,6 +63,7 @@ RUN rm -rf /pgadmin4/web/*.log \
 WORKDIR /pgadmin4/web
 
 # Build the JS vendor code in the app-builder, and then remove the vendor source.
+# hadolint ignore=DL3016
 RUN \
     --mount=type=cache,id=yarn,sharing=locked,target=/root/.yarn \
     export YARN_CACHE_FOLDER=/root/.yarn && \
@@ -74,7 +77,7 @@ RUN \
     rm -rf node_modules \
            yarn.lock \
            package.json \
-           .[^.]* \
+           .[!.]* \
            babel.cfg \
            webpack.* \
            jest.config.js \
@@ -85,13 +88,14 @@ RUN \
 #########################################################################
 # Next, create the base environment for Python
 #########################################################################
-
-FROM alpine:latest as env-builder
+# hadolint ignore=DL3007
+FROM alpine:latest AS env-builder
 ARG TARGETARCH
 ARG TARGETVARIANT
 # Install dependencies
-COPY official-pgadmin4/requirements.txt /
+COPY --link official-pgadmin4/requirements.txt /
 
+# hadolint ignore=DL3018
 RUN --mount=type=cache,id=apk-${TARGETARCH}-${TARGETVARIANT},sharing=locked,target=/var/cache/apk \
         apk add \
             make \
@@ -120,7 +124,7 @@ RUN --mount=type=cache,id=pip-${TARGETARCH}-${TARGETVARIANT},sharing=locked,targ
 # Now, create a documentation build container for the Sphinx docs
 #########################################################################
 
-FROM env-builder as docs-builder
+FROM env-builder AS docs-builder
 ARG TARGETARCH
 ARG TARGETVARIANT
 
@@ -131,8 +135,10 @@ RUN --mount=type=cache,id=pip-${TARGETARCH}-${TARGETVARIANT},sharing=locked,targ
 
 # Copy the docs from the local tree. Explicitly remove any existing builds that
 # may be present
-COPY official-pgadmin4/docs /pgadmin4/docs
-COPY official-pgadmin4/web /pgadmin4/web
+# hadolint ignore=DL3021
+COPY --link official-pgadmin4/docs /pgadmin4/docs
+# hadolint ignore=DL3021
+COPY --link official-pgadmin4/web /pgadmin4/web
 RUN rm -rf /pgadmin4/docs/en_US/_build
 
 # Build the docs
@@ -153,7 +159,8 @@ FROM postgres:14-alpine AS pg14-builder
 FROM postgres:15-alpine AS pg15-builder
 FROM postgres:16-alpine AS pg16-builder
 
-FROM alpine:latest as tool-builder
+# hadolint ignore=DL3007
+FROM alpine:latest AS tool-builder
 
 # Copy the PG binaries
 COPY --from=pg12-builder /usr/local/bin/pg_dump /usr/local/pgsql/pgsql-12/
@@ -184,7 +191,8 @@ COPY --from=pg16-builder /usr/local/bin/psql /usr/local/pgsql/pgsql-16/
 #########################################################################
 # Assemble everything into the final container.
 #########################################################################
-FROM $BUILD_FROM 
+# hadolint ignore=DL3006
+FROM $BUILD_FROM AS final
 ARG TARGETARCH
 ARG TARGETVARIANT
 
@@ -199,7 +207,7 @@ COPY --from=pg16-builder /usr/lib/liblz4.so.1.9.4 /usr/lib/
 
 RUN ln -s libpq.so.5.16 /usr/lib/libpq.so.5 && \
     ln -s libpq.so.5.16 /usr/lib/libpq.so && \
-    ln -s libzstd.so.1.5.6 /usr/lib/libzstd.so.1 && \
+#    ln -s libzstd.so.1.5.6 /usr/lib/libzstd.so.1 && \
     ln -s liblz4.so.1.9.4 /usr/lib/liblz4.so.1
 
 WORKDIR /pgadmin4
@@ -212,15 +220,20 @@ COPY --from=docs-builder /pgadmin4/docs/en_US/_build/html/ /pgadmin4/docs
 # Dumb fix for a docker build: https://github.com/moby/moby/issues/37965
 RUN true
 
-COPY official-pgadmin4/pkg/docker/run_pgadmin.py /pgadmin4
-COPY official-pgadmin4/pkg/docker/gunicorn_config.py /pgadmin4
+# hadolint ignore=DL3021
+COPY --link official-pgadmin4/pkg/docker/run_pgadmin.py /pgadmin4/
+# hadolint ignore=DL3021
+COPY --link official-pgadmin4/pkg/docker/gunicorn_config.py /pgadmin4/
 #COPY official-pgadmin4/pkg/docker/entrypoint.sh /entrypoint.sh
 
 # License files
-COPY official-pgadmin4/LICENSE /pgadmin4/LICENSE
-COPY official-pgadmin4/DEPENDENCIES /pgadmin4/DEPENDENCIES
+# hadolint ignore=DL3021
+COPY --link official-pgadmin4/LICENSE /pgadmin4/
+# hadolint ignore=DL3021
+COPY --link official-pgadmin4/DEPENDENCIES /pgadmin4/
 
 # Install runtime dependencies and configure everything in one RUN step
+# hadolint ignore=DL3018
 RUN --mount=type=cache,id=final-apk-${TARGETARCH}-${TARGETVARIANT},sharing=locked,target=/var/cache/apk \
     apk add \
         apk-tools \
@@ -248,7 +261,7 @@ RUN     find / -type d -name '__pycache__' -exec rm -rf {} + && \
         chown pgadmin:root /pgadmin4/config_distro.py && \
         chmod g=u /pgadmin4/config_distro.py && \
         chmod g=u /etc/passwd && \
-        setcap CAP_NET_BIND_SERVICE=+eip /usr/bin/python3.11 && \
+        setcap CAP_NET_BIND_SERVICE=+eip /usr/bin/python3.12 && \
         echo "pgadmin ALL = NOPASSWD: /usr/sbin/postfix start" > /etc/sudoers.d/postfix && \
         echo "pgadminr ALL = NOPASSWD: /usr/sbin/postfix start" >> /etc/sudoers.d/postfix
 
@@ -257,6 +270,7 @@ RUN     find / -type d -name '__pycache__' -exec rm -rf {} + && \
 # --------------------------------------
 
 # Install NGINX for Ingress support
+# hadolint ignore=DL3018
 RUN --mount=type=cache,id=final-apk-${TARGETARCH}-${TARGETVARIANT},sharing=locked,target=/var/cache/apk \
     apk add \
         git \
@@ -278,13 +292,41 @@ ENV \
     PGADMIN_CONFIG_WTF_CSRF_CHECK_DEFAULT="False" \
     PGADMIN_CONFIG_WTF_CSRF_ENABLED="False"
 
+ARG CACHE_BUST
+
+# Timestamp the build
+RUN date +%Y%m%d%H%M%S > /build-timestamp
+
 # Copy data
 COPY  rootfs /
 RUN chmod +x /etc/cont-init.d/* \
     && chmod +x /etc/services.d/nginx/* \
     && chmod +x /etc/services.d/pgadmin4/*
 
-#Disabled the special user, because we need to have a lot more in place to move away from ROOT
-#USER pgadmin
+# Disabled the special user, because we need to have a lot more in place to move away from ROOT
+# USER pgadmin
 
 WORKDIR /
+
+# Labels
+LABEL \
+    io.hass.name="pgAdmin4 HA Addon (${BUILD_ARCH})" \
+    io.hass.description="Home Assistant Add-on: pgAdmin4" \
+    io.hass.arch="${BUILD_ARCH}" \
+    io.hass.type="base" \
+    io.hass.version=${BUILD_VERSION} \
+    io.hass.base.version=${BUILD_VERSION} \
+    io.hass.base.name="alpine" \
+    io.hass.base.image="hassioaddons/base" \
+    maintainer="Hans van Essen <hans@expaso.nl>" \
+    org.opencontainers.image.title="pgAdmin4 HA Addon (${BUILD_ARCH})" \
+    org.opencontainers.image.description="Home Assistant Add-on: pgAdmin4" \
+    org.opencontainers.image.vendor="Expaso BV" \
+    org.opencontainers.image.authors="Hans van Essen <hans@expaso.nl>" \
+    org.opencontainers.image.licenses="Apache 2.0" \
+    org.opencontainers.image.url="https://ghcr.io/expaso/pgadmin4/${BUILD_ARCH}:" \
+    org.opencontainers.image.source="https://github.com/expaso/hassos-addon-pgadmin4" \
+    org.opencontainers.image.documentation="https://github.com/expaso/hassos-addon-pgadmin4/blob/master/README.md" \
+    org.opencontainers.image.created=${BUILD_DATE} \
+    org.opencontainers.image.revision=${BUILD_REF} \
+    org.opencontainers.image.version=${BUILD_VERSION}
