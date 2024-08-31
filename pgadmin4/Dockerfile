@@ -252,8 +252,7 @@ RUN --mount=type=cache,id=final-apk-${TARGETARCH}-${TARGETVARIANT},sharing=locke
 RUN --mount=type=cache,id=pip-${TARGETARCH}-${TARGETVARIANT},sharing=locked,target=/root/.cache \
         /venv/bin/python3 -m pip install gunicorn==20.1.0
 
-RUN     find / -type d -name '__pycache__' -exec rm -rf {} + && \
-        useradd -r -u 5050 -g root -s /sbin/nologin pgadmin && \
+RUN     useradd -r -u 5050 -g root -s /sbin/nologin pgadmin && \
         mkdir -p /var/lib/pgadmin && \
         chown pgadmin:root /var/lib/pgadmin && \
         chmod g=u /var/lib/pgadmin && \
