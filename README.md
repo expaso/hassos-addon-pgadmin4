@@ -1,4 +1,5 @@
 # Home Assistant Add-on: [pgAdmin 4](https://www.pgadmin.org/)
+
 <a href="https://www.buymeacoffee.com/expaso" target="_blank"><img src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png" alt="Buy Me A Coffee" style="height: 40px !important;width: 180px !important;" ></a>
 
 ## Introduction
@@ -21,4 +22,3 @@ Start the add-on, check the logs of the add-on to see if everything went well.
 
 On first start-up, a new configuration is created. This can take some time.
 Please be patient.
-
