@@ -82,7 +82,7 @@ for arch in $(yq -r '.arch[]' config.yaml); do
         --platform $platform \
         --cache-from type=registry,ref=husselhans/hassos-addon-pgadmin4:cache \
         --cache-to type=registry,ref=husselhans/hassos-addon-pgadmin4:cache,mode=max \
-        --tag "husselhans/hassos-addon-pgadmin4-$arch:$version" \
+        --tag "ghcr.io/expaso/pgadmin4/$arch:$version" \
         --build-arg "BUILD_FROM=ghcr.io/hassio-addons/base/$arch:16.2.1" \
         --progress plain \
         .

@@ -16,7 +16,7 @@ ARG BUILD_ARCH=aarch64
 This can also be done by passing the build-arguments by the commandline:
 
 ```
-docker build --tag husselhans/hassos-addon-pgadmin4-armv7:dev . --build-arg BUILD_FROM=ghcr.io/hassio-addons/base/armv7:16.2.1
+docker build --tag ghcr.io/expaso/pgadmin4/armv7:dev . --build-arg BUILD_FROM=ghcr.io/hassio-addons/base/armv7:16.2.1
 ```
 
 Hereafter, you can push the image to dockerhub using cmd of docker desktop for testing purposes.
@@ -41,12 +41,12 @@ This will use the base images from the `build.json` file, and the architecture s
 
 ## Push latest DEV image to repository
 
-docker image push husselhans/hassos-addon-pgadmin4-aarch64:dev
+docker image push ghcr.io/expaso/pgadmin4/aarch64:dev
 
 ## Run the addon with an interactive shell
 
 From a system SSH (port 22222), run the docker container with data attached:
 
 ```
-docker run -it --entrypoint "/bin/sh" -v /mnt/data/supervisor/addons/data/local_pgadmin4/:/data:rw  husselhans/hassos-addon-pgadmin4-aarch64:dev
+docker run -it --entrypoint "/bin/sh" -v /mnt/data/supervisor/addons/data/local_pgadmin4/:/data:rw  ghcr.io/expaso/pgadmin4/aarch64:dev
 ```
