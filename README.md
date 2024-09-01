@@ -1,10 +1,13 @@
+
+<a href="https://www.buymeacoffee.com/expaso" target="_blank"><img src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png" alt="Buy Me A Coffee" style="height: 40px !important;width: 180px !important;" ></a>
+
 # Home Assistant Add-on: [pgAdmin 4](https://www.pgadmin.org/)
 
 ## Introduction
 
 pgAdmin is the most popular and feature rich Open Source administration and development platform for PostgreSQL, the most advanced Open Source database in the world.
 
-This Add-on can be used to control any postgreSQL databases on your network, incuding those served by the TimescaleDB add-on.
+This Add-on can be used to control any postgreSQL databases on your network, incuding those served the TimescaleDB add-on, which can also install from the same addon-repository.
 
 ## Installation
 
@@ -65,3 +68,13 @@ Serves the website without protection of home-assistant user authentication.
 
 Setting this option is a potential security risk and should be avoided whenever possible.
 If you don't know what you are doing, just leave it off.
+
+## Support
+
+- Got questions? 
+[Open an issue here][issues]
+
+- For a general repository issue or add-on ideas? [Open an issue here][repo-issues]
+
+[issues]: https://github.com/expaso/hassos-addon-pgadmin4/issues
+[repo-issues]: https://github.com/expaso/hassos-addons/issues
