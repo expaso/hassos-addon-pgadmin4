@@ -1,4 +1,3 @@
-
 <a href="https://www.buymeacoffee.com/expaso" target="_blank"><img src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png" alt="Buy Me A Coffee" style="height: 40px !important;width: 180px !important;" ></a>
 
 # Home Assistant Add-on: [pgAdmin 4](https://www.pgadmin.org/)
@@ -71,8 +70,8 @@ If you don't know what you are doing, just leave it off.
 
 ## Support
 
-- Got questions? 
-[Open an issue here][issues]
+- Got questions?
+  [Open an issue here][issues]
 
 - For a general repository issue or add-on ideas? [Open an issue here][repo-issues]
 
