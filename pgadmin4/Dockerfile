@@ -5,7 +5,7 @@ ARG BUILD_FROM=ghcr.io/hassio-addons/base/aarch64:16.2.1
 #
 # pgAdmin 4 - PostgreSQL Tools
 #
-# Copyright (C) 2013 - 2024, The pgAdmin Development Team
+# Copyright (C) 2013 - 2025, The pgAdmin Development Team
 # This software is released under the PostgreSQL Licence
 #
 #########################################################################
@@ -13,7 +13,7 @@ ARG BUILD_FROM=ghcr.io/hassio-addons/base/aarch64:16.2.1
 # hadolint ignore=DL3029, DL3007
 FROM --platform=$BUILDPLATFORM alpine:latest AS app-builder
 
-# hadolint ignore=DL3018
+# hadolint ignore=DL3018, DL3019
 RUN --mount=type=cache,id=apk,sharing=locked,target=/var/cache/apk \
     apk add \
         autoconf \
@@ -44,12 +44,13 @@ RUN \
 # remove the node_modules directory as we'll recreate a clean version, as well
 # as various other files we don't want
 COPY official-pgadmin4/web /pgadmin4/web
+# hadolint ignore=SC2046
 RUN rm -rf /pgadmin4/web/*.log \
            /pgadmin4/web/config_*.py \
            /pgadmin4/web/node_modules \
            /pgadmin4/web/regression \
-           `find /pgadmin4/web -type d -name tests` \
-           `find /pgadmin4/web -type f -name .DS_Store`
+           $(find /pgadmin4/web -type d -name tests) \
+           $(find /pgadmin4/web -type f -name .DS_Store)
 
 #### PATCH SOURCES ####
 # Patch pgadmin-files to fix small issues.
@@ -95,7 +96,7 @@ ARG TARGETVARIANT
 # Install dependencies
 COPY --link official-pgadmin4/requirements.txt /
 
-# hadolint ignore=DL3018
+# hadolint ignore=DL3018, DL3019
 RUN --mount=type=cache,id=apk-${TARGETARCH}-${TARGETVARIANT},sharing=locked,target=/var/cache/apk \
         apk add \
             make \
@@ -142,12 +143,13 @@ COPY --link official-pgadmin4/web /pgadmin4/web
 RUN rm -rf /pgadmin4/docs/en_US/_build
 
 # Build the docs
+# hadolint ignore=DL3059
 RUN LC_ALL=en_US.UTF-8 LANG=en_US.UTF-8 /venv/bin/sphinx-build /pgadmin4/docs/en_US /pgadmin4/docs/en_US/_build/html
 
 # Cleanup unwanted files
-RUN rm -rf /pgadmin4/docs/en_US/_build/html/.doctrees
-RUN rm -rf /pgadmin4/docs/en_US/_build/html/_sources
-RUN rm -rf /pgadmin4/docs/en_US/_build/html/_static/*.png
+RUN rm -rf /pgadmin4/docs/en_US/_build/html/.doctrees && \
+    rm -rf /pgadmin4/docs/en_US/_build/html/_sources && \
+    rm -rf /pgadmin4/docs/en_US/_build/html/_static/*.png
 
 #########################################################################
 # Create additional builders to get all of the PostgreSQL utilities
@@ -158,6 +160,7 @@ FROM postgres:13-alpine AS pg13-builder
 FROM postgres:14-alpine AS pg14-builder
 FROM postgres:15-alpine AS pg15-builder
 FROM postgres:16-alpine AS pg16-builder
+FROM postgres:17-alpine AS pg17-builder
 
 # hadolint ignore=DL3007
 FROM alpine:latest AS tool-builder
@@ -188,6 +191,11 @@ COPY --from=pg16-builder /usr/local/bin/pg_dumpall /usr/local/pgsql/pgsql-16/
 COPY --from=pg16-builder /usr/local/bin/pg_restore /usr/local/pgsql/pgsql-16/
 COPY --from=pg16-builder /usr/local/bin/psql /usr/local/pgsql/pgsql-16/
 
+COPY --from=pg17-builder /usr/local/bin/pg_dump /usr/local/pgsql/pgsql-17/
+COPY --from=pg17-builder /usr/local/bin/pg_dumpall /usr/local/pgsql/pgsql-17/
+COPY --from=pg17-builder /usr/local/bin/pg_restore /usr/local/pgsql/pgsql-17/
+COPY --from=pg17-builder /usr/local/bin/psql /usr/local/pgsql/pgsql-17/
+
 #########################################################################
 # Assemble everything into the final container.
 #########################################################################
@@ -201,14 +209,14 @@ COPY --from=env-builder /venv /venv
 
 # Copy in the tools
 COPY --from=tool-builder /usr/local/pgsql /usr/local/
-COPY --from=pg16-builder /usr/local/lib/libpq.so.5.16 /usr/lib/
-COPY --from=pg16-builder /usr/lib/libzstd.so.1.5.6 /usr/lib/
-COPY --from=pg16-builder /usr/lib/liblz4.so.1.9.4 /usr/lib/
+COPY --from=pg17-builder /usr/local/lib/libpq.so.5.17 /usr/lib/
+COPY --from=pg17-builder /usr/lib/libzstd.so.1.5.6 /usr/lib/
+COPY --from=pg17-builder /usr/lib/liblz4.so.1.10.0 /usr/lib/
 
-RUN ln -s libpq.so.5.16 /usr/lib/libpq.so.5 && \
-    ln -s libpq.so.5.16 /usr/lib/libpq.so && \
+RUN ln -s libpq.so.5.17 /usr/lib/libpq.so.5 && \
+    ln -s libpq.so.5.17 /usr/lib/libpq.so && \
 #    ln -s libzstd.so.1.5.6 /usr/lib/libzstd.so.1 && \
-    ln -s liblz4.so.1.9.4 /usr/lib/liblz4.so.1
+    ln -s liblz4.so.1.10.0 /usr/lib/liblz4.so.1
 
 WORKDIR /pgadmin4
 ENV PYTHONPATH=/pgadmin4
@@ -233,7 +241,7 @@ COPY --link official-pgadmin4/LICENSE /pgadmin4/
 COPY --link official-pgadmin4/DEPENDENCIES /pgadmin4/
 
 # Install runtime dependencies and configure everything in one RUN step
-# hadolint ignore=DL3018
+# hadolint ignore=DL3018, DL3019
 RUN --mount=type=cache,id=final-apk-${TARGETARCH}-${TARGETVARIANT},sharing=locked,target=/var/cache/apk \
     apk add \
         apk-tools \
@@ -269,7 +277,7 @@ RUN     useradd -r -u 5050 -g root -s /sbin/nologin pgadmin && \
 # --------------------------------------
 
 # Install NGINX for Ingress support
-# hadolint ignore=DL3018
+# hadolint ignore=DL3018, DL3019
 RUN --mount=type=cache,id=final-apk-${TARGETARCH}-${TARGETVARIANT},sharing=locked,target=/var/cache/apk \
     apk add \
         git \
