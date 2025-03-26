@@ -44,12 +44,13 @@ RUN \
 # remove the node_modules directory as we'll recreate a clean version, as well
 # as various other files we don't want
 COPY official-pgadmin4/web /pgadmin4/web
+# hadolint ignore=SC2046
 RUN rm -rf /pgadmin4/web/*.log \
            /pgadmin4/web/config_*.py \
            /pgadmin4/web/node_modules \
            /pgadmin4/web/regression \
-           `find /pgadmin4/web -type d -name tests` \
-           `find /pgadmin4/web -type f -name .DS_Store`
+           $(find /pgadmin4/web -type d -name tests) \
+           $(find /pgadmin4/web -type f -name .DS_Store)
 
 #### PATCH SOURCES ####
 # Patch pgadmin-files to fix small issues.
@@ -142,12 +143,13 @@ COPY --link official-pgadmin4/web /pgadmin4/web
 RUN rm -rf /pgadmin4/docs/en_US/_build
 
 # Build the docs
+# hadolint ignore=DL3059
 RUN LC_ALL=en_US.UTF-8 LANG=en_US.UTF-8 /venv/bin/sphinx-build /pgadmin4/docs/en_US /pgadmin4/docs/en_US/_build/html
 
 # Cleanup unwanted files
-RUN rm -rf /pgadmin4/docs/en_US/_build/html/.doctrees
-RUN rm -rf /pgadmin4/docs/en_US/_build/html/_sources
-RUN rm -rf /pgadmin4/docs/en_US/_build/html/_static/*.png
+RUN rm -rf /pgadmin4/docs/en_US/_build/html/.doctrees && \
+    rm -rf /pgadmin4/docs/en_US/_build/html/_sources && \
+    rm -rf /pgadmin4/docs/en_US/_build/html/_static/*.png
 
 #########################################################################
 # Create additional builders to get all of the PostgreSQL utilities
@@ -239,7 +241,7 @@ COPY --link official-pgadmin4/LICENSE /pgadmin4/
 COPY --link official-pgadmin4/DEPENDENCIES /pgadmin4/
 
 # Install runtime dependencies and configure everything in one RUN step
-# hadolint ignore=DL3018
+# hadolint ignore=DL3018, DL3019
 RUN --mount=type=cache,id=final-apk-${TARGETARCH}-${TARGETVARIANT},sharing=locked,target=/var/cache/apk \
     apk add \
         apk-tools \
@@ -275,7 +277,7 @@ RUN     useradd -r -u 5050 -g root -s /sbin/nologin pgadmin && \
 # --------------------------------------
 
 # Install NGINX for Ingress support
-# hadolint ignore=DL3018
+# hadolint ignore=DL3018, DL3019
 RUN --mount=type=cache,id=final-apk-${TARGETARCH}-${TARGETVARIANT},sharing=locked,target=/var/cache/apk \
     apk add \
         git \
