@@ -5,7 +5,7 @@ ARG BUILD_FROM=ghcr.io/hassio-addons/base/aarch64:16.2.1
 #
 # pgAdmin 4 - PostgreSQL Tools
 #
-# Copyright (C) 2013 - 2024, The pgAdmin Development Team
+# Copyright (C) 2013 - 2025, The pgAdmin Development Team
 # This software is released under the PostgreSQL Licence
 #
 #########################################################################
@@ -13,7 +13,7 @@ ARG BUILD_FROM=ghcr.io/hassio-addons/base/aarch64:16.2.1
 # hadolint ignore=DL3029, DL3007
 FROM --platform=$BUILDPLATFORM alpine:latest AS app-builder
 
-# hadolint ignore=DL3018
+# hadolint ignore=DL3018, DL3019
 RUN --mount=type=cache,id=apk,sharing=locked,target=/var/cache/apk \
     apk add \
         autoconf \
@@ -96,7 +96,7 @@ ARG TARGETVARIANT
 # Install dependencies
 COPY --link official-pgadmin4/requirements.txt /
 
-# hadolint ignore=DL3018
+# hadolint ignore=DL3018, DL3019
 RUN --mount=type=cache,id=apk-${TARGETARCH}-${TARGETVARIANT},sharing=locked,target=/var/cache/apk \
         apk add \
             make \
