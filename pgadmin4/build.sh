@@ -32,7 +32,7 @@ done
 # Print the result
 echo "Building version '$version' for platforms '$archs'"
 
-# error: failed to solve: ghcr.io/hassio-addons/base/armv7:16.2.1: error getting credentials - err: exec: "docker-credential-desktop.exe": executable file not found in $PATH, out: `
+# error: failed to solve: ghcr.io/hassio-addons/base/armv7:17.2.1: error getting credentials - err: exec: "docker-credential-desktop.exe": executable file not found in $PATH, out: `
 #Solution:
 #In ~/.docker/config.json change credsStore to credStore
 
@@ -81,9 +81,9 @@ for arch in $(yq -r '.arch[]' config.yaml); do
         --push \
         --platform $platform \
         --cache-from type=registry,ref=husselhans/hassos-addon-pgadmin4:cache \
-        --cache-to type=registry,ref=husselhans/hassos-addon-pgadmin4:cache,mode=max \
+        --cache-to "type=registry,ref=ghcr.io/expaso/pgadmin4/$arch:edge,mode=max" \
         --tag "ghcr.io/expaso/pgadmin4/$arch:$version" \
-        --build-arg "BUILD_FROM=ghcr.io/hassio-addons/base/$arch:16.2.1" \
+        --build-arg "BUILD_FROM=ghcr.io/hassio-addons/base/$arch:17.2.1" \
         --progress plain \
         .
 done

@@ -1,4 +1,4 @@
-ARG BUILD_FROM=ghcr.io/hassio-addons/base/aarch64:16.2.1
+ARG BUILD_FROM=ghcr.io/hassio-addons/base/aarch64:17.2.1
 
 #Source: https://github.com/postgres/pgadmin4/blob/master/Dockerfile
 ########################################################################
