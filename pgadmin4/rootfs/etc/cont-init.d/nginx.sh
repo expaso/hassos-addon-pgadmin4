@@ -12,7 +12,7 @@ declare ingress_entry
 declare keyfile
 
 # Check if there is a port mapping..
-admin_port=$(bashio::addon.port 80)
+admin_port=$(bashio::app.port 80)
 if bashio::var.has_value "${admin_port}"; then
     bashio::config.require.ssl
 
@@ -35,9 +35,9 @@ if bashio::var.has_value "${admin_port}"; then
 fi
 
 # Patch ingress server to contain the correct portnumbers and paths
-ingress_port=$(bashio::addon.ingress_port)
-ingress_interface=$(bashio::addon.ip_address)
-ingress_entry=$(bashio::addon.ingress_entry)
+ingress_port=$(bashio::app.ingress_port)
+ingress_interface=$(bashio::app.ip_address)
+ingress_entry=$(bashio::app.ingress_entry)
 sed -i "s/%%port%%/${ingress_port}/g" /etc/nginx/servers/ingress.conf
 sed -i "s/%%interface%%/${ingress_interface}/g" /etc/nginx/servers/ingress.conf
 sed -i "s#%%entry%%#${ingress_entry}#g" /etc/nginx/servers/ingress.conf

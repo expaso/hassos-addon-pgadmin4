@@ -10,7 +10,7 @@ declare pgadmin_pid
 bashio::log.info "Starting pgAdmin.."
 
 # Move to the right dir.
-cd /pgadmin4
+cd /pgadmin4 || exit 1
 
 # Start Postfix to handle password resets etc.
 sudo /usr/sbin/postfix start
@@ -22,7 +22,7 @@ timeout=$(cd /pgadmin4 && /venv/bin/python3 -c 'import config; print(config.SESS
 # Start pgAdmin
 # NOTE: currently pgadmin can run only with 1 worker due to sessions implementation
 # Using --threads to have multi-threaded single-process worker
-exec /venv/bin/gunicorn --timeout ${timeout} \
+exec /venv/bin/gunicorn --timeout "${timeout}" \
                         --bind unix:/tmp/pgadmin4.sock \
                         --workers=1 \
                         --threads=25 \

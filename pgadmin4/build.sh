@@ -54,7 +54,7 @@ for arch in $(yq -r '.arch[]' config.yaml); do
     ##translate the arch to the docker buildx arch
     case $arch in
         "aarch64")
-            platform="linux/aarch64"
+            platform="linux/arm64"
             ;;
         "amd64")
             platform="linux/amd64"
@@ -83,7 +83,9 @@ for arch in $(yq -r '.arch[]' config.yaml); do
         --cache-from type=registry,ref=husselhans/hassos-addon-pgadmin4:cache \
         --cache-to "type=registry,ref=ghcr.io/expaso/pgadmin4/$arch:edge,mode=max" \
         --tag "ghcr.io/expaso/pgadmin4/$arch:$version" \
-        --build-arg "BUILD_FROM=ghcr.io/hassio-addons/base/$arch:17.2.1" \
+        --build-arg "BUILD_FROM=ghcr.io/hassio-addons/base/$arch:21.0.11" \
+        --build-arg "BUILD_ARCH=$arch" \
+        --build-arg "BUILD_VERSION=$version" \
         --progress plain \
         .
 done

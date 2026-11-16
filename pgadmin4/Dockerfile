@@ -1,4 +1,5 @@
-ARG BUILD_FROM=ghcr.io/hassio-addons/base/aarch64:17.2.1
+ARG BUILD_FROM=ghcr.io/hassio-addons/base/aarch64:21.0.11
+ARG ALPINE_VERSION=3.24
 
 #Source: https://github.com/postgres/pgadmin4/blob/master/Dockerfile
 ########################################################################
@@ -11,7 +12,7 @@ ARG BUILD_FROM=ghcr.io/hassio-addons/base/aarch64:17.2.1
 #########################################################################
 
 # hadolint ignore=DL3029, DL3007
-FROM --platform=$BUILDPLATFORM alpine:latest AS app-builder
+FROM --platform=$BUILDPLATFORM alpine:${ALPINE_VERSION} AS app-builder
 
 # hadolint ignore=DL3018, DL3019
 RUN --mount=type=cache,id=apk,sharing=locked,target=/var/cache/apk \
@@ -32,11 +33,12 @@ RUN --mount=type=cache,id=apk,sharing=locked,target=/var/cache/apk \
         yarn \
         zlib-dev
 
-# FIX: Clone into temp folder, and move the .git directory to root. Apparently the build-process needs this.
+# The frontend build uses Git metadata, which is not included in the submodule's build context.
 RUN \
     mkdir /tmp/pgadmin4 && \
-    git clone --no-checkout https://github.com/pgadmin-org/pgadmin4.git /tmp/pgadmin4 && \
-    mv /tmp/pgadmin4/.git / && \
+    git clone --depth 1 --branch REL-9_19 https://github.com/pgadmin-org/pgadmin4.git /tmp/pgadmin4 && \
+    mkdir -p /pgadmin4 && \
+    mv /tmp/pgadmin4/.git /pgadmin4/ && \
     rm -rf /tmp/pgadmin4
 
 
@@ -71,9 +73,7 @@ RUN \
     export CPPFLAGS="-DPNG_ARM_NEON_OPT=0" && \
     npm install -g corepack && \
     corepack enable && \
-    yarn set version berry && \
-    yarn set version 3 && \
-    yarn install && \
+    yarn install --immutable && \
     yarn run bundle && \
     rm -rf node_modules \
            yarn.lock \
@@ -90,7 +90,7 @@ RUN \
 # Next, create the base environment for Python
 #########################################################################
 # hadolint ignore=DL3007
-FROM alpine:latest AS env-builder
+FROM alpine:${ALPINE_VERSION} AS env-builder
 ARG TARGETARCH
 ARG TARGETVARIANT
 # Install dependencies
@@ -100,6 +100,7 @@ COPY --link official-pgadmin4/requirements.txt /
 RUN --mount=type=cache,id=apk-${TARGETARCH}-${TARGETVARIANT},sharing=locked,target=/var/cache/apk \
         apk add \
             make \
+            libpq \
             python3 \
             py3-pip && \
         apk add --virtual build-deps \
@@ -155,15 +156,20 @@ RUN rm -rf /pgadmin4/docs/en_US/_build/html/.doctrees && \
 # Create additional builders to get all of the PostgreSQL utilities
 #########################################################################
 
-FROM postgres:12-alpine AS pg12-builder
-FROM postgres:13-alpine AS pg13-builder
-FROM postgres:14-alpine AS pg14-builder
-FROM postgres:15-alpine AS pg15-builder
-FROM postgres:16-alpine AS pg16-builder
-FROM postgres:17-alpine AS pg17-builder
+FROM docker.io/library/postgres:12-alpine AS pg12-builder
+FROM docker.io/library/postgres:13-alpine AS pg13-builder
+FROM docker.io/library/postgres:14-alpine AS pg14-builder
+FROM docker.io/library/postgres:15-alpine AS pg15-builder
+FROM docker.io/library/postgres:16-alpine AS pg16-builder
+FROM docker.io/library/postgres:17-alpine AS pg17-builder
+
+# Alpine's Lua packages depend on OpenResty, which conflicts with nginx.
+FROM alpine:${ALPINE_VERSION} AS lua-builder
+# hadolint ignore=DL3018
+RUN apk add --no-cache lua-resty-string lua-resty-openssl
 
 # hadolint ignore=DL3007
-FROM alpine:latest AS tool-builder
+FROM alpine:${ALPINE_VERSION} AS tool-builder
 
 # Copy the PG binaries
 COPY --from=pg12-builder /usr/local/bin/pg_dump /usr/local/pgsql/pgsql-12/
@@ -209,15 +215,6 @@ COPY --from=env-builder /venv /venv
 
 # Copy in the tools
 COPY --from=tool-builder /usr/local/pgsql /usr/local/
-COPY --from=pg17-builder /usr/local/lib/libpq.so.5.17 /usr/lib/
-COPY --from=pg17-builder /usr/lib/libzstd.so.1.5.6 /usr/lib/
-COPY --from=pg17-builder /usr/lib/liblz4.so.1.10.0 /usr/lib/
-
-RUN ln -s libpq.so.5.17 /usr/lib/libpq.so.5 && \
-    ln -s libpq.so.5.17 /usr/lib/libpq.so && \
-#    ln -s libzstd.so.1.5.6 /usr/lib/libzstd.so.1 && \
-    ln -s liblz4.so.1.10.0 /usr/lib/liblz4.so.1
-
 WORKDIR /pgadmin4
 ENV PYTHONPATH=/pgadmin4
 
@@ -237,9 +234,6 @@ COPY --link official-pgadmin4/pkg/docker/gunicorn_config.py /pgadmin4/
 # License files
 # hadolint ignore=DL3021
 COPY --link official-pgadmin4/LICENSE /pgadmin4/
-# hadolint ignore=DL3021
-COPY --link official-pgadmin4/DEPENDENCIES /pgadmin4/
-
 # Install runtime dependencies and configure everything in one RUN step
 # hadolint ignore=DL3018, DL3019
 RUN --mount=type=cache,id=final-apk-${TARGETARCH}-${TARGETVARIANT},sharing=locked,target=/var/cache/apk \
@@ -255,10 +249,14 @@ RUN --mount=type=cache,id=final-apk-${TARGETARCH}-${TARGETVARIANT},sharing=locke
         tzdata \
         libedit \
         libldap \
-        libcap
+        libcap \
+        libpq \
+        lz4-libs \
+        zstd-libs \
+        postgresql18-client
 
 RUN --mount=type=cache,id=pip-${TARGETARCH}-${TARGETVARIANT},sharing=locked,target=/root/.cache \
-        /venv/bin/python3 -m pip install gunicorn==20.1.0
+        /venv/bin/python3 -m pip install gunicorn==23.0.0
 
 RUN     useradd -r -u 5050 -g root -s /sbin/nologin pgadmin && \
         mkdir -p /var/lib/pgadmin && \
@@ -268,7 +266,7 @@ RUN     useradd -r -u 5050 -g root -s /sbin/nologin pgadmin && \
         chown pgadmin:root /pgadmin4/config_distro.py && \
         chmod g=u /pgadmin4/config_distro.py && \
         chmod g=u /etc/passwd && \
-        setcap CAP_NET_BIND_SERVICE=+eip /usr/bin/python3.12 && \
+        setcap CAP_NET_BIND_SERVICE=+eip "$(readlink -f /usr/bin/python3)" && \
         echo "pgadmin ALL = NOPASSWD: /usr/sbin/postfix start" > /etc/sudoers.d/postfix && \
         echo "pgadminr ALL = NOPASSWD: /usr/sbin/postfix start" >> /etc/sudoers.d/postfix
 
@@ -284,6 +282,9 @@ RUN --mount=type=cache,id=final-apk-${TARGETARCH}-${TARGETVARIANT},sharing=locke
         lua-resty-http \
         nginx-mod-http-lua \
         nginx
+
+COPY --from=lua-builder /usr/share/lua/common/resty/string.lua /usr/share/lua/common/resty/
+COPY --from=lua-builder /usr/share/lua/common/resty/openssl /usr/share/lua/common/resty/openssl
 
 # Precompile and optimize python code to save time and space on startup
 RUN /venv/bin/python3 -O -m compileall -x node_modules /pgadmin4
@@ -314,6 +315,11 @@ RUN chmod +x /etc/cont-init.d/* \
 # USER pgadmin
 
 WORKDIR /
+
+ARG BUILD_ARCH
+ARG BUILD_DATE
+ARG BUILD_REF
+ARG BUILD_VERSION
 
 # Labels
 LABEL \

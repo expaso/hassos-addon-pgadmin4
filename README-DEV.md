@@ -1,22 +1,29 @@
 # Local development
 
+Initialize the pgAdmin source submodule before building:
+
+```
+git submodule update --init --recursive
+```
+
 To build the lastest version using local docker, switch to the folder where the `dockerfile` resides, and run:
 
 ```
 ./build.sh
 ```
 
-The dockerfile already contains the default build architecture and the default base image:
+The Dockerfile contains a default base image:
 
 ```
-ARG BUILD_FROM=ghcr.io/hassio-addons/base/aarch64:17.2.1
-ARG BUILD_ARCH=aarch64
+ARG BUILD_FROM=ghcr.io/hassio-addons/base/aarch64:21.0.11
 ```
 
-This can also be done by passing the build-arguments by the commandline:
+Set the platform, base image and architecture together when building manually:
 
 ```
-docker build --tag ghcr.io/expaso/pgadmin4/armv7:dev . --build-arg BUILD_FROM=ghcr.io/hassio-addons/base/armv7:17.2.1
+docker build --platform linux/amd64 --tag ghcr.io/expaso/pgadmin4/amd64:dev . \
+    --build-arg BUILD_FROM=ghcr.io/hassio-addons/base/amd64:21.0.11 \
+    --build-arg BUILD_ARCH=amd64 --build-arg BUILD_VERSION=dev
 ```
 
 Hereafter, you can push the image to dockerhub using cmd of docker desktop for testing purposes.
